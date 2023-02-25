@@ -11,6 +11,9 @@ import (
 )
 
 func btkafka(broker string, topics []string, group string) {
+	sigchan := make(chan os.Signal, 1)
+	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
+
 	consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
 		"bootstrap.servers":     broker,
 		"broker.address.family": "v4",
@@ -30,17 +33,6 @@ func btkafka(broker string, topics []string, group string) {
 	fmt.Printf("Created Consumer %v\n", consumer)
 
 	err = consumer.SubscribeTopics(topics, nil)
-}
-
-func main() {
-	fmt.Println("Hello World!")
-	var broker = "10.54.162.129:9092"
-	var topics = []string{"cisco"}
-	var group = "healthbot"
-	sigchan := make(chan os.Signal, 1)
-	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
-
-	btkafka(broker, topics, group)
 
 	run := true
 	for run {
@@ -78,4 +70,13 @@ func main() {
 	}
 	fmt.Printf("Closing consumer\n")
 	consumer.Close()
+}
+
+func main() {
+	fmt.Println("Hello World!")
+	var broker = "10.54.162.129:9092"
+	var topics = []string{"cisco"}
+	var group = "healthbot"
+
+	btkafka(broker, topics, group)
 }
