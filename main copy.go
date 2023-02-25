@@ -10,7 +10,36 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 )
 
-func btkafka(broker string, topics string, group string) {
+func btkafka(broker string, group string) {
+	consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
+		"bootstrap.servers":     broker,
+		"broker.address.family": "v4",
+		"group.id":              group,
+		"session.timeout.ms":    6000,
+		// Start reading from the first message of each assigned
+		// partition if there are no previously committed offsets
+		// for this group.x
+		"auto.offset.reset": "earliest",
+		// Whether or not we store offsets automatically.
+		"enable.auto.offset.store": false,
+	})
+
+	if err != nil {
+		fmt.Println("Failed to create consumer: %s\n", err)
+	}
+	fmt.Printf("Created Consumer %v\n", consumer)
+}
+
+func main() {
+	fmt.Println("Hello World!")
+	var broker = "10.54.162.129:9092"
+	var topics = []string{"cisco"}
+	var group = "healthbot"
+	sigchan := make(chan os.Signal, 1)
+	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
+
+	btkafka(broker, group)
+
 	consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
 		"bootstrap.servers":     broker,
 		"broker.address.family": "v4",
@@ -30,17 +59,6 @@ func btkafka(broker string, topics string, group string) {
 	fmt.Printf("Created Consumer %v\n", consumer)
 
 	err = consumer.SubscribeTopics(topics, nil)
-}
-
-func main() {
-	fmt.Println("Hello World!")
-	var broker = "10.54.162.129:9092"
-	var topics = []string{"cisco"}
-	var group = "healthbot"
-	sigchan := make(chan os.Signal, 1)
-	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
-
-	btkafka(broker, topics, group)
 
 	run := true
 	for run {
