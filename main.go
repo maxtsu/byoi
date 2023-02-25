@@ -10,7 +10,7 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 )
 
-func btkafka(broker string, topics string, group string) {
+func btkafka(broker string, topics []string, group string) {
 	consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
 		"bootstrap.servers":     broker,
 		"broker.address.family": "v4",
