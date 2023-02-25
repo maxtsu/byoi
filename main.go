@@ -10,6 +10,21 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 )
 
+func btkafka(broker string, group string) {
+	consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
+		"bootstrap.servers":     broker,
+		"broker.address.family": "v4",
+		"group.id":              group,
+		"session.timeout.ms":    6000,
+		// Start reading from the first message of each assigned
+		// partition if there are no previously committed offsets
+		// for this group.x
+		"auto.offset.reset": "earliest",
+		// Whether or not we store offsets automatically.
+		"enable.auto.offset.store": false,
+	})
+}
+
 func main() {
 	fmt.Println("Hello World!")
 	var broker = "10.54.162.129:9092"
