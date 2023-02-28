@@ -80,7 +80,7 @@ func configJSON() {
 	//fmt.Println(res)
 
 	// we initialize our Users array
-	var users Top
+	var users Users
 	// we unmarshal our byteArray which contains our
 	// jsonFile's content into 'users' which we defined above
 	json.Unmarshal(byteResult, &users)

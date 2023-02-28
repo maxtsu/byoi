@@ -1,4 +1,7 @@
-{
+{"logging": {
+  "level": "debug",
+  "enabled": "cfgmgr,health,info,ingest,logsvr,signal,hbcustom"
+},
   "users": [
     {
       "name": "Elliot",
