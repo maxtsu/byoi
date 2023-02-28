@@ -118,15 +118,15 @@ func configJSON() {
 	}
 
 	// Now let's unmarshall the data into `byoiConfig`
-	var ByoiConfig Hbin
-	err = json.Unmarshal(content, &ByoiConfig)
+	var Byoiconfig Hbin
+	err = json.Unmarshal(content, &Byoiconfig)
 	if err != nil {
 		log.Fatal("Error during Unmarshal(): ", err)
 	}
 
 	// Let's print the unmarshalled data!
 	//log.Printf("Device: %s\n", ByoiConfig.Device)
-	fmt.Println(ByoiConfig)
+	fmt.Println(Byoiconfig)
 	// log.Printf("user: %s\n", byoiConfig.User)
 	// log.Printf("status: %t\n", byoiConfig.Active)
 }
