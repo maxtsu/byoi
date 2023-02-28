@@ -1,7 +1,4 @@
 {
-    "logging": {
-        "level": "debug",
-        "enabled": "cfgmgr,health,info,ingest,logsvr,signal,hbcustom"
-    },
+    "logging": "log this",
     "hbin": "top hbin"
 }
