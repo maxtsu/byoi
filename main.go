@@ -39,10 +39,10 @@ type User struct {
 
 // Social struct which contains a
 // list of links
-type Social struct {
-	Facebook string `json:"facebook"`
-	Twitter  string `json:"twitter"`
-}
+//type Social struct {
+//	Facebook string `json:"facebook"`
+//	Twitter  string `json:"twitter"`
+//}
 
 func configJSON() {
 	file, err := os.Open(configfile)
