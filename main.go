@@ -32,6 +32,7 @@ func testConfig() {
 
 	byteResult, _ := ioutil.ReadAll(file)
 
+	fmt.Println(byteResult)
 	var configuration Hbin
 	json.Unmarshal(byteResult, &configuration)
 	fmt.Println(configuration)
