@@ -3,10 +3,5 @@
         "level": "debug",
         "enabled": "cfgmgr,health,info,ingest,logsvr,signal,hbcustom"
     },
-    "hbin": {
-        "inputs": {
-            "name": "influx"
-        },
-        "outputs": "this thing"
-    }
+    "hbin": "top hbin"
 }
