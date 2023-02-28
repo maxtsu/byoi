@@ -112,21 +112,20 @@ func testConfig() {
 
 func configJSON() {
 	// Let's first read the `config.json` file
-	content, err := ioutil.ReadFile(configfile)
+	content, err := os.Open(configfile)
 	if err != nil {
 		log.Fatal("Error when opening file: ", err)
 	}
 
+	defer fileContent.Close()
+	byteResult, _ := ioutil.ReadAll(fileConten)
+	fmt.Println(byteResult)
 	// Now let's unmarshall the data into `byoiConfig`
-	var Byoiconfig Hbin
-	err = json.Unmarshal(content, &Byoiconfig)
-	if err != nil {
-		log.Fatal("Error during Unmarshal(): ", err)
-	}
+	//	var Byoiconfig Hbin
 
 	// Let's print the unmarshalled data!
 	//log.Printf("Device: %s\n", ByoiConfig.Device)
-	fmt.Println(Byoiconfig)
+	//	fmt.Println(Byoiconfig)
 	// log.Printf("user: %s\n", byoiConfig.User)
 	// log.Printf("status: %t\n", byoiConfig.Active)
 }
