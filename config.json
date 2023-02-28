@@ -2,7 +2,8 @@
     "logging": "log this",
     "hbin": {
         "inputs": [
-            {}
+            {               
+                "plugin": "MDT-Kafka-Json"}
         ],
         "outputs": [
             {}
