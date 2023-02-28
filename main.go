@@ -16,11 +16,48 @@ import (
 // var configfile = "/etc/byoi/config.json"
 var configfile = "config.json"
 
-// The data struct for the decoded data
+// The Config struct for the config.json
 type Config struct {
-	Origin string
-	User   string
-	Active bool
+	Device   []Device `json:"device"`
+	Security Security `json:"security"`
+	KVs      []KVs    `json:"kvs"`
+	logger   log.Logger
+}
+
+// Device type
+type Device struct {
+	Name      string         `json:"name"`
+	SystemID  string         `json:"system-id"`
+	Sensor    []Sensor       `json:"sensor"`
+	HBStorage HBStorage      `json:"healthbot-storage"`
+	Auth      Authentication `json:"authentication"`
+}
+
+// Sensor config
+type Sensor struct {
+	Name        string `json:"name"`
+	KVs         []KVs  `json:"kvs"`
+	Measurement string `json:"measurement"`
+}
+
+// HBStorage to specify DB name and retention policy name for this device
+type HBStorage struct {
+	DB              string `json:"database"`
+	RetentionPolicy string `json:"retention-policy"`
+}
+
+// Authentication config
+type Authentication struct {
+}
+
+// Security config
+type Security struct {
+}
+
+// KVs config
+type KVs struct {
+	Key   string `json:"key"`
+	Value string `json:"value"`
 }
 
 func configJSON() {
@@ -30,17 +67,17 @@ func configJSON() {
 		log.Fatal("Error when opening file: ", err)
 	}
 
-	// Now let's unmarshall the data into `payload`
-	var payload Config
-	err = json.Unmarshal(content, &payload)
+	// Now let's unmarshall the data into `byoiConfig`
+	var byoiConfig Config
+	err = json.Unmarshal(content, &byoiConfig)
 	if err != nil {
 		log.Fatal("Error during Unmarshal(): ", err)
 	}
 
 	// Let's print the unmarshalled data!
-	log.Printf("origin: %s\n", payload.Origin)
-	log.Printf("user: %s\n", payload.User)
-	log.Printf("status: %t\n", payload.Active)
+	log.Printf("origin: %s\n", byoiConfig.Device)
+	// log.Printf("user: %s\n", byoiConfig.User)
+	// log.Printf("status: %t\n", byoiConfig.Active)
 }
 
 func btkafka(broker string, topics []string, group string) {
