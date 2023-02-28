@@ -1,4 +1,11 @@
 {
     "logging": "log this",
-    "hbin": "top hbin"
+    "hbin": {
+        "inputs": [
+            {}
+        ],
+        "outputs": [
+            {}
+        ]
+    }
 }
