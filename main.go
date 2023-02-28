@@ -13,8 +13,7 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 )
 
-// var configfile = "/etc/byoi/config.json"
-var configfile = "config.json"
+var configfile = "/etc/byoi/config.json"
 
 // The Config struct for the config.json
 type Config struct {
