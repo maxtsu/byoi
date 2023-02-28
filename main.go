@@ -194,10 +194,10 @@ func btkafka(broker string, topics []string, group string) {
 }
 
 func main() {
-	fmt.Println("Hello Worfgbfgbfgld!")
-	var broker = "10.54.162.129:9092"
-	var topics = []string{"cisco"}
-	var group = "healthbot"
+	fmt.Println("Hello World!")
+	//var broker = "10.54.162.129:9092"
+	//var topics = []string{"cisco"}
+	//var group = "healthbot"
 
 	//read config file
 	//configJSON()
