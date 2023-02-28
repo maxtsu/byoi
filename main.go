@@ -41,7 +41,7 @@ type Outputs struct {
 
 // The Inputs struct for the config.json
 type Inputs struct {
-	Plugin Plugin `json:"plugin"`
+	Plugin string `json:"plugin"`
 }
 
 // The Plugin struct for the config.json
