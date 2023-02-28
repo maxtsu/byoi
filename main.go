@@ -54,9 +54,9 @@ func configJSON() {
 
 	byteResult, _ := ioutil.ReadAll(file)
 
-	var res map[string]interface{}
-	json.Unmarshal([]byte(byteResult), &res)
-	fmt.Println(res)
+	//var res map[string]interface{}
+	//json.Unmarshal([]byte(byteResult), &res)
+	//fmt.Println(res)
 
 	// we initialize our Users array
 	var users Users
