@@ -13,13 +13,14 @@ import (
 )
 
 // var configfile = "/etc/byoi/config.json"
-// var configfile = "config.json"
-var configfile = "users.json"
+var configfile = "config.json"
+
+//var configfile = "users.json"
 
 // The Top struct for the config.json
 type Top struct {
-	Hbin    Hbin    `json:"hbin"`
-	Logging Logging `json:"logging"`
+	Hbin Hbin `json:"hbin"`
+	// Logging Logging `json:"logging"`
 }
 
 // The Logging struct for the config.json
@@ -79,7 +80,7 @@ func configJSON() {
 	//fmt.Println(res)
 
 	// we initialize our Users array
-	var users Users
+	var users Top
 	// we unmarshal our byteArray which contains our
 	// jsonFile's content into 'users' which we defined above
 	json.Unmarshal(byteResult, &users)
