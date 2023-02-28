@@ -45,7 +45,7 @@ func configJSON() {
 	var users Users
 	// we unmarshal our byteArray which contains our
 	// jsonFile's content into 'users' which we defined above
-	json.Unmarshal(byteValue, &users)
+	json.Unmarshal(byteResult, &users)
 	fmt.Println(users)
 }
 
