@@ -30,8 +30,8 @@ type Logging struct {
 
 // The Hbin struct for the config.json
 type Hbin struct {
-	Inputs  Inputs  `json:"inputs"`
-	Outputs Outputs `json:"outputs"`
+	Inputs  []Inputs  `json:"inputs"`
+	Outputs []Outputs `json:"outputs"`
 }
 
 // The Outputs struct for the config.json
