@@ -24,7 +24,7 @@ type Top struct {
 }
 
 // The Logging struct for the config.json
-type Top struct {
+type Logging struct {
 }
 
 // The Hbin struct for the config.json
