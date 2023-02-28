@@ -23,6 +23,10 @@ type Top struct {
 	Logging Logging `json:"logging"`
 }
 
+// The Logging struct for the config.json
+type Top struct {
+}
+
 // The Hbin struct for the config.json
 type Hbin struct {
 	Inputs  Inputs  `json:"inputs"`
