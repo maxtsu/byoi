@@ -4,6 +4,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -61,23 +62,26 @@ type KVs struct {
 }
 
 func testConfig() {
-	fileContent, err := os.Open(configfile)
-
+	file, err := os.Open(configfile)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println("File reading error", err)
 		return
 	}
+	defer file.Close() // it's important to close the file after reading it
 
-	fmt.Println("The File is opened successfully...")
-
-	defer fileContent.Close()
-
-	byteResult, _ := ioutil.ReadAll(fileContent)
-
-	var res map[string]interface{}
-	json.Unmarshal([]byte(byteResult), &res)
-
-	fmt.Println(res["users"])
+	// create a byte slice to hold the file contents
+	data := make([]byte, 1024)
+	for {
+		n, err := file.Read(data)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			fmt.Println("File reading error", err)
+			return
+		}
+		fmt.Println("Read", n, "bytes:", string(data[:n]))
+	}
 }
 
 func configJSON() {
