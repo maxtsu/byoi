@@ -70,10 +70,9 @@ func testConfig() {
 
 	byteResult, _ := ioutil.ReadAll(file)
 
-	var res map[string]interface{}
-	json.Unmarshal([]byte(byteResult), &res)
-
-	fmt.Println(res)
+	var configuration Config
+	json.Unmarshal(byteResult, &configuration)
+	fmt.Println(configuration)
 }
 
 func configJSON() {
