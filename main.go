@@ -40,6 +40,13 @@ func configJSON() {
 	var res map[string]interface{}
 	json.Unmarshal([]byte(byteResult), &res)
 	fmt.Println(res)
+
+	// we initialize our Users array
+	var users Users
+	// we unmarshal our byteArray which contains our
+	// jsonFile's content into 'users' which we defined above
+	json.Unmarshal(byteValue, &users)
+	fmt.Println(users)
 }
 
 func btkafka(broker string, topics []string, group string) {
