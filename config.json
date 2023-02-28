@@ -7,18 +7,6 @@
         "inputs": {
             "name": "influx"
         },
-        "outputs": [
-            {
-                "plugin": {
-                    "name": "influx",
-                    "config": {
-                        "server": "localhost",
-                        "port": 3000,
-                        "user": "influx",
-                        "password": "influxdb"
-                    }
-                }
-            }
-        ]
+        "outputs": "this thing"
     }
 }
