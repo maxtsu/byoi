@@ -41,7 +41,7 @@ type Outputs struct {
 
 // The Inputs struct for the config.json
 type Inputs struct {
-	// Plugin []Plugin `json:"plugin"`
+	Plugin Plugin `json:"plugin"`
 }
 
 // Users struct which contains
