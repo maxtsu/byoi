@@ -4,7 +4,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -69,19 +68,12 @@ func testConfig() {
 	}
 	defer file.Close() // it's important to close the file after reading it
 
-	// create a byte slice to hold the file contents
-	data := make([]byte, 1024)
-	for {
-		n, err := file.Read(data)
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			fmt.Println("File reading error", err)
-			return
-		}
-		fmt.Println("Read", n, "bytes:", string(data[:n]))
-	}
+	byteResult, _ := ioutil.ReadAll(file)
+
+	var res map[string]interface{}
+	json.Unmarshal([]byte(byteResult), &res)
+
+	fmt.Println(res)
 }
 
 func configJSON() {
