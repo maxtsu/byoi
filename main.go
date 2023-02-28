@@ -85,7 +85,7 @@ func configJSON() {
 	// we unmarshal our byteArray which contains our
 	// jsonFile's content into 'users' which we defined above
 	json.Unmarshal(byteResult, &users)
-	fmt.Println(users)
+	fmt.Println(users.Hbin)
 }
 
 func btkafka(broker string, topics []string, group string) {
