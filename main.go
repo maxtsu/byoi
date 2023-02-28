@@ -74,7 +74,8 @@ func configJSON() {
 	}
 
 	// Let's print the unmarshalled data!
-	log.Printf("origin: %s\n", byoiConfig.Device)
+	log.Printf("Device: %s\n", byoiConfig.Device)
+	fmt.Println(byoiConfig)
 	// log.Printf("user: %s\n", byoiConfig.User)
 	// log.Printf("status: %t\n", byoiConfig.Active)
 }
