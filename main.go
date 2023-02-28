@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -22,40 +21,19 @@ type Hbin struct {
 	Outputs string `json:"outputs"`
 }
 
-func testConfig() {
+func configJSON() {
 	file, err := os.Open(configfile)
 	if err != nil {
 		fmt.Println("File reading error", err)
 		return
 	}
-	defer file.Close() // it's important to close the file after reading it
+	defer file.Close()
 
 	byteResult, _ := ioutil.ReadAll(file)
 
-	fmt.Println(byteResult)
-	var configuration Hbin
-	json.Unmarshal(byteResult, &configuration)
-	fmt.Println(configuration)
-}
-
-func configJSON() {
-	// Let's first read the `config.json` file
-	fileContent, err := os.Open(configfile)
-	if err != nil {
-		log.Fatal("Error when opening file: ", err)
-	}
-
-	defer fileContent.Close()
-	byteResult, _ := ioutil.ReadAll(fileContent)
-	fmt.Println(byteResult)
-	// Now let's unmarshall the data into `byoiConfig`
-	//	var Byoiconfig Hbin
-
-	// Let's print the unmarshalled data!
-	//log.Printf("Device: %s\n", ByoiConfig.Device)
-	//	fmt.Println(Byoiconfig)
-	// log.Printf("user: %s\n", byoiConfig.User)
-	// log.Printf("status: %t\n", byoiConfig.Active)
+	var res map[string]interface{}
+	json.Unmarshal([]byte(byteResult), &res)
+	fmt.Println(res)
 }
 
 func btkafka(broker string, topics []string, group string) {
@@ -127,8 +105,7 @@ func main() {
 	//var group = "healthbot"
 
 	//read config file
-	//configJSON()
-	testConfig()
+	configJSON()
 
 	//open connection to kafka broker
 	// btkafka(broker, topics, group)
