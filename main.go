@@ -17,6 +17,12 @@ var configfile = "config.json"
 
 //var configfile = "users.json"
 
+// The Top struct for the config.json
+type Top struct {
+	Hbin    Hbin    `json:"hbin"`
+	Logging Logging `json:"logging"`
+}
+
 // The Hbin struct for the config.json
 type Hbin struct {
 	Inputs  Inputs  `json:"inputs"`
@@ -70,7 +76,7 @@ func configJSON() {
 	//fmt.Println(res)
 
 	// we initialize our Users array
-	var users Hbin
+	var users Top
 	// we unmarshal our byteArray which contains our
 	// jsonFile's content into 'users' which we defined above
 	json.Unmarshal(byteResult, &users)
