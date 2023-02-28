@@ -33,7 +33,7 @@ func configJSON() {
 
 	var res map[string]interface{}
 	json.Unmarshal([]byte(byteResult), &res)
-	fmt.Println(res)
+	fmt.Println(res["hbin"])
 }
 
 func btkafka(broker string, topics []string, group string) {
