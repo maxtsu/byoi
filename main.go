@@ -13,13 +13,24 @@ import (
 )
 
 // var configfile = "/etc/byoi/config.json"
-// var configfile = "config.json"
-var configfile = "users.json"
+var configfile = "config.json"
+
+//var configfile = "users.json"
 
 // The Hbin struct for the config.json
 type Hbin struct {
-	Inputs  string `json:"inputs"`
-	Outputs string `json:"outputs"`
+	Inputs  Inputs  `json:"inputs"`
+	Outputs Outputs `json:"outputs"`
+}
+
+// The Outputs struct for the config.json
+type Outputs struct {
+	// OutPlugin []OutPlugin `json:"plugin"`
+}
+
+// The Inputs struct for the config.json
+type Inputs struct {
+	// Plugin []Plugin `json:"plugin"`
 }
 
 // Users struct which contains
@@ -59,7 +70,7 @@ func configJSON() {
 	//fmt.Println(res)
 
 	// we initialize our Users array
-	var users Users
+	var users Hbin
 	// we unmarshal our byteArray which contains our
 	// jsonFile's content into 'users' which we defined above
 	json.Unmarshal(byteResult, &users)
