@@ -58,7 +58,7 @@ type User struct {
 	Social []Social `json:"social"`
 }
 
-// Social struct which contains a
+// Social struct which contains
 // list of links
 type Social struct {
 	// Facebook string `json:"facebook"`
