@@ -61,12 +61,11 @@ type KVs struct {
 
 func configJSON() {
 	// Let's first read the `config.json` file
-	fmt.Println("Hello World!" + configfile)
 	content, err := ioutil.ReadFile(configfile)
 	if err != nil {
 		log.Fatal("Error when opening file: ", err)
 	}
-
+	fmt.Println(content)
 	// Now let's unmarshall the data into `byoiConfig`
 	var byoiConfig Config
 	err = json.Unmarshal(content, &byoiConfig)
