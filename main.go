@@ -65,17 +65,16 @@ func configJSON() {
 	if err != nil {
 		log.Fatal("Error when opening file: ", err)
 	}
-	fmt.Println(content)
 	// Now let's unmarshall the data into `byoiConfig`
-	var byoiConfig Config
-	err = json.Unmarshal(content, &byoiConfig)
+	var ByoiConfig Config
+	err = json.Unmarshal(content, &ByoiConfig)
 	if err != nil {
 		log.Fatal("Error during Unmarshal(): ", err)
 	}
 
 	// Let's print the unmarshalled data!
-	log.Printf("Device: %s\n", byoiConfig.Device)
-	fmt.Println(byoiConfig)
+	log.Printf("Device: %s\n", ByoiConfig.Device)
+	fmt.Println(ByoiConfig)
 	// log.Printf("user: %s\n", byoiConfig.User)
 	// log.Printf("status: %t\n", byoiConfig.Active)
 }
