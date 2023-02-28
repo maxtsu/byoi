@@ -16,12 +16,47 @@ import (
 // var configfile = "/etc/byoi/config.json"
 var configfile = "config.json"
 
+// The Inputs struct for the config.json
+type Hbin struct {
+	Inputs  []Inputs  `json:"inputs"`
+	Outputs []Outputs `json:"outputs"`
+}
+
+// The Outputs struct for the config.json
+type Outputs struct {
+	OutPlugin []OutPlugin `json:"plugin"`
+}
+
+// The Output Plugin struct for the config.json
+type OutPlugin struct {
+	Name      string      `json:"name"`
+	OutConfig []OutConfig `json:"config"`
+}
+
+// The Config struct for the config.json
+type OutConfig struct {
+	Server   string `json:"server"`
+	Port     string `json:"port"`
+	User     string `json:"user"`
+	Password string `json:"password"`
+}
+
+// The Inputs struct for the config.json
+type Inputs struct {
+	Plugin []Plugin `json:"plugin"`
+}
+
+// The Plugin struct for the config.json
+type Plugin struct {
+	Name   string   `json:"name"`
+	Config []Config `json:"config"`
+}
+
 // The Config struct for the config.json
 type Config struct {
-	Device   []Device `json:"device"`
-	Security Security `json:"security"`
-	KVs      []KVs    `json:"kvs"`
-	logger   log.Logger
+	Device []Device `json:"device"`
+	Devgrp string   `json:"device-group"`
+	KVs    []KVs    `json:"kvs"`
 }
 
 // Device type
@@ -169,5 +204,5 @@ func main() {
 	testConfig()
 
 	//open connection to kafka broker
-	btkafka(broker, topics, group)
+	// btkafka(broker, topics, group)
 }
