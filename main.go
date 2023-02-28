@@ -59,12 +59,33 @@ type KVs struct {
 	Value string `json:"value"`
 }
 
+func testConfig() {
+	fileContent, err := os.Open(configfile)
+
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+
+	fmt.Println("The File is opened successfully...")
+
+	defer fileContent.Close()
+
+	byteResult, _ := ioutil.ReadAll(fileContent)
+
+	var res map[string]interface{}
+	json.Unmarshal([]byte(byteResult), &res)
+
+	fmt.Println(res["users"])
+}
+
 func configJSON() {
 	// Let's first read the `config.json` file
 	content, err := ioutil.ReadFile(configfile)
 	if err != nil {
 		log.Fatal("Error when opening file: ", err)
 	}
+
 	// Now let's unmarshall the data into `byoiConfig`
 	var ByoiConfig Config
 	err = json.Unmarshal(content, &ByoiConfig)
@@ -148,7 +169,8 @@ func main() {
 	var group = "healthbot"
 
 	//read config file
-	configJSON()
+	//configJSON()
+	testConfig()
 
 	//open connection to kafka broker
 	btkafka(broker, topics, group)
