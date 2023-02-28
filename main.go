@@ -19,7 +19,8 @@ var configfile = "config.json"
 
 // The Top struct for the config.json
 type Top struct {
-	Hbin string `json:"hbin"`
+	Logging string `json:"logging"`
+	Hbin    string `json:"hbin"`
 	// Logging Logging `json:"logging"`
 }
 
