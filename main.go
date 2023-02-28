@@ -112,7 +112,7 @@ func testConfig() {
 
 func configJSON() {
 	// Let's first read the `config.json` file
-	content, err := os.Open(configfile)
+	fileContent, err := os.Open(configfile)
 	if err != nil {
 		log.Fatal("Error when opening file: ", err)
 	}
