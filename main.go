@@ -44,6 +44,12 @@ type Inputs struct {
 	Plugin Plugin `json:"plugin"`
 }
 
+// The Plugin struct for the config.json
+type Plugin struct {
+	Name string `json:"name"`
+	//Config []Config `json:"config"`
+}
+
 // Users struct which contains
 // an array of users
 type Users struct {

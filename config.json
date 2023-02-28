@@ -3,7 +3,10 @@
     "hbin": {
         "inputs": [
             {               
-                "plugin": "MDT-Kafka-Json"}
+                "plugin": {
+                    "name": "MDT-Kafka-Json"
+                }
+            }
         ],
         "outputs": [
             {}
