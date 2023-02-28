@@ -31,10 +31,10 @@ type Users struct {
 // User struct which contains a name
 // a type and a list of social links
 type User struct {
-	Name   string `json:"name"`
-	Type   string `json:"type"`
-	Age    int    `json:"Age"`
-	Social string `json:"social"`
+	Name   string   `json:"name"`
+	Type   string   `json:"type"`
+	Age    int      `json:"Age"`
+	Social []string `json:"social"`
 }
 
 // Social struct which contains a
