@@ -13,12 +13,18 @@ import (
 )
 
 // var configfile = "/etc/byoi/config.json"
-var configfile = "config.json"
+// var configfile = "config.json"
+var configfile = "users.json"
 
 // The Hbin struct for the config.json
 type Hbin struct {
 	Inputs  string `json:"inputs"`
 	Outputs string `json:"outputs"`
+}
+
+// Users struct which contains
+type Users struct {
+	Users []string `json:"users"`
 }
 
 func configJSON() {
@@ -33,7 +39,7 @@ func configJSON() {
 
 	var res map[string]interface{}
 	json.Unmarshal([]byte(byteResult), &res)
-	fmt.Println(res["hbin"])
+	fmt.Println(res)
 }
 
 func btkafka(broker string, topics []string, group string) {
