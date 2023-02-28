@@ -2,13 +2,46 @@ package main
 
 // this is a comment
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 )
+
+// var configfile = "/etc/byoi/config.json"
+var configfile = "config.json"
+
+// The data struct for the decoded data
+type Config struct {
+	Origin string
+	User   string
+	Active bool
+}
+
+func configJSON() {
+	// Let's first read the `config.json` file
+	content, err := ioutil.ReadFile(configfile)
+	if err != nil {
+		log.Fatal("Error when opening file: ", err)
+	}
+
+	// Now let's unmarshall the data into `payload`
+	var payload Config
+	err = json.Unmarshal(content, &payload)
+	if err != nil {
+		log.Fatal("Error during Unmarshal(): ", err)
+	}
+
+	// Let's print the unmarshalled data!
+	log.Printf("origin: %s\n", payload.Origin)
+	log.Printf("user: %s\n", payload.User)
+	log.Printf("status: %t\n", payload.Active)
+}
 
 func btkafka(broker string, topics []string, group string) {
 	sigchan := make(chan os.Signal, 1)
@@ -78,5 +111,9 @@ func main() {
 	var topics = []string{"cisco"}
 	var group = "healthbot"
 
+	//read config file
+	configJSON()
+
+	//open connection to kafka broker
 	btkafka(broker, topics, group)
 }
