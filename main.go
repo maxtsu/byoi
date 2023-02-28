@@ -13,9 +13,8 @@ import (
 )
 
 // var configfile = "/etc/byoi/config.json"
-var configfile = "config.json"
-
-//var configfile = "users.json"
+// var configfile = "config.json"
+var configfile = "users.json"
 
 // The Top struct for the config.json
 type Top struct {
