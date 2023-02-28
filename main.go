@@ -34,7 +34,7 @@ type User struct {
 	Name   string `json:"name"`
 	Type   string `json:"type"`
 	Age    int    `json:"Age"`
-	Social Social `json:"social"`
+	Social string `json:"social"`
 }
 
 // Social struct which contains a
