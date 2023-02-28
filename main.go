@@ -118,7 +118,7 @@ func configJSON() {
 	}
 
 	defer fileContent.Close()
-	byteResult, _ := ioutil.ReadAll(fileConten)
+	byteResult, _ := ioutil.ReadAll(fileContent)
 	fmt.Println(byteResult)
 	// Now let's unmarshall the data into `byoiConfig`
 	//	var Byoiconfig Hbin
