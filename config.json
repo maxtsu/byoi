@@ -1,14 +1,115 @@
 {
-    "logging": "log this",
+    "logging": {
+        "level": "debug",
+        "enabled": "cfgmgr,health,info,ingest,logsvr,signal,hbcustom"
+    },
     "hbin": {
-        "name": "hbin name",
         "inputs": [
-            {               
-                "plugin": "plugin"
+            {
+                "plugin": {
+                    "name": "MDT-Kafka-Json",
+                    "config": {
+                        "device": [
+                            {
+                                "name": "10.213.97.127",
+                                "sensor": [
+                                    {
+                                        "name": "external/cisco-check-interface-state-oc/interface_state",
+                                        "kvs": [
+                                            {
+                                                "key": "path",
+                                                "value": "interfaces/interface/state"
+                                            }
+                                        ],
+                                        "measurement": "external/cisco-check-interface-state-oc/interface_state/byoi"
+                                    },
+                                    {
+                                        "name": "external/cisco-check-interface-traffic-oc/interface_stats",
+                                        "kvs": [
+                                            {
+                                                "key": "path",
+                                                "value": "interfaces/interface/state/counters"
+                                            }
+                                        ],
+                                        "measurement": "external/cisco-check-interface-traffic-oc/interface_stats/byoi"
+                                    }
+                                ],
+                                "authentication": {
+                                    "password": {
+                                        "password": "$9$sQ4oGPfz6CuaZz69Cu0Lx7V24GDi",
+                                        "username": "cisco"
+                                    }
+                                },
+                                "healthbot-storage": {
+                                    "database": "hb-default:Cisco:node14",
+                                    "retention-policy": "hb-default:Cisco:node14"
+                                },
+                                "system-id": "node14"
+                            },
+                            {
+                                "name": "10.213.97.126",
+                                "sensor": [
+                                    {
+                                        "name": "external/cisco-check-interface-state-oc/interface_state",
+                                        "kvs": [
+                                            {
+                                                "key": "path",
+                                                "value": "interfaces/interface/state"
+                                            }
+                                        ],
+                                        "measurement": "external/cisco-check-interface-state-oc/interface_state/byoi"
+                                    },
+                                    {
+                                        "name": "external/cisco-check-interface-traffic-oc/interface_stats",
+                                        "kvs": [
+                                            {
+                                                "key": "path",
+                                                "value": "interfaces/interface/state/counters"
+                                            }
+                                        ],
+                                        "measurement": "external/cisco-check-interface-traffic-oc/interface_stats/byoi"
+                                    }
+                                ],
+                                "authentication": {
+                                    "password": {
+                                        "password": "$9$UiHkP/9pBRSqmpBIRSys2gJjHP5Q",
+                                        "username": "cisco"
+                                    }
+                                },
+                                "healthbot-storage": {
+                                    "database": "hb-default:Cisco:node5",
+                                    "retention-policy": "hb-default:Cisco:node5"
+                                },
+                                "system-id": "node5"
+                            }
+                        ],
+                        "device-group": "Cisco",
+                        "kvs": [
+                            {
+                                "key": "brokers",
+                                "value": "10.2.126.101:9092"
+                            },
+                            {
+                                "key": "topics",
+                                "value": "paragon.insights.byoi.ingest"
+                            }
+                        ]
+                    }
+                }
             }
         ],
         "outputs": [
-            {}
+            {
+                "plugin": {
+                    "name": "influx",
+                    "config": {
+                        "server": "localhost",
+                        "port": 3000,
+                        "user": "influx",
+                        "password": "influxdb"
+                    }
+                }
+            }
         ]
     }
 }
