@@ -6,41 +6,17 @@ package main
 // influxdb point write
 
 import (
-	"encoding/json"
 	"fmt"
-	"os"
-	//"maxwell/configjson"
+	"maxwell/configjson"
 )
 
 // the plugin config.json file
 // var configfile = "/etc/byoi/config.json"
-//var configfile = "config.json"
-
-// TEST struct
-type Person struct {
-	Name string
-	Age  int
-}
+var configfile = "config.json"
 
 func main() {
 	fmt.Println("HelloWorld!")
-	//configjson.ConfigJSON(configfile)
-	//fmt.Println(configjson.Configuration.Hbin.Inputs[0].Plugin.Config.Device[1])
+	configjson.ConfigJSON(configfile)
 
-	//TESTING json writing
-	file, err := os.Open("data.json")
-	if err != nil {
-		fmt.Println("File reading error", err)
-		return
-	}
-	defer file.Close()
-	var p Person
-	decoder := json.NewDecoder(file)
-	err = decoder.Decode(&p)
-	if err != nil {
-		fmt.Println("File reading error", err)
-		return
-	}
-
-	fmt.Println("persons name: " + p.Name)
+	fmt.Println("hbDB: " + configjson.Configuration.Hbin.Inputs[0].Plugin.Config.Device[0].HBStorage.DB)
 }
