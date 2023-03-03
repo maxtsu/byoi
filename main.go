@@ -42,5 +42,5 @@ func main() {
 		return
 	}
 
-	fmt.Println(p)
+	fmt.Println("persons name: " + p.Name)
 }
