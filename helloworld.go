@@ -2,8 +2,9 @@ package main
 
 // Test program for linux compile
 import (
+	"configjson"
 	"fmt"
-	"maxwell/configjson"
+	"os"
 
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 )
@@ -17,6 +18,7 @@ func main() {
 	var broker = "10.54.162.129:9092"
 	var topics = []string{"cisco"}
 	var group = "healthbot"
+	var run = true
 
 	consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
 		"bootstrap.servers":     broker,
@@ -30,5 +32,27 @@ func main() {
 		// Whether or not we store offsets automatically
 		"enable.auto.offset.store": false,
 	})
+
+	err = consumer.SubscribeTopics(topics, nil)
+
+	if err != nil {
+		fmt.Printf("Failed to create consumer: %s\n", err)
+		os.Exit(1)
+	}
+
+	for run == true {
+		ev := consumer.Poll(100)
+		switch e := ev.(type) {
+		case *kafka.Message:
+			// application-specific processing
+		case kafka.Error:
+			fmt.Fprintf(os.Stderr, "%% Error: %v\n", e)
+			run = false
+		default:
+			fmt.Printf("Ignored %v\n", e)
+		}
+	}
+
+	consumer.Close()
 
 }
