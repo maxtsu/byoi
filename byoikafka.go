@@ -22,7 +22,7 @@ func btkafka(broker string, topics []string, group string) {
 		// partition if there are no previously committed offsets
 		// for this group.x
 		"auto.offset.reset": "earliest",
-		// Whether or not we store offsets automatically.
+		// Whether or not we store offsets automatically
 		"enable.auto.offset.store": false,
 	})
 

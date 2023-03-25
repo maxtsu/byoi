@@ -19,4 +19,5 @@ func main() {
 	configjson.ConfigJSON(configfile)
 
 	fmt.Println("hbDB: " + configjson.Configuration.Hbin.Inputs[0].Plugin.Config.Device[0].HBStorage.DB)
+
 }
