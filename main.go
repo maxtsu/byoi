@@ -37,11 +37,11 @@ func main() {
 
 	bootstrapServers := brokertopic[0]
 	group := "byoi"
-	topics := brokertopic[1]
+	//topics := brokertopic[1]
 	sigchan := make(chan os.Signal, 1)
 	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
 
-	c, err := kafka.NewConsumer(&kafka.ConfigMap{
+	consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
 		"bootstrap.servers": bootstrapServers,
 		// Avoid connecting to IPv6 brokers:
 		// This is needed for the ErrAllBrokersDown show-case below
@@ -63,5 +63,5 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Failed to create consumer: %s\n", err)
 		os.Exit(1)
 	}
-
+	fmt.Printf("Created Consumer %v\n", consumer)
 }
