@@ -37,7 +37,7 @@ func main() {
 
 	bootstrapServers := brokertopic[0]
 	group := "byoi"
-	//topics := brokertopic[1]
+	topics := brokertopic[1]
 	sigchan := make(chan os.Signal, 1)
 	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
 
@@ -64,4 +64,7 @@ func main() {
 		os.Exit(1)
 	}
 	fmt.Printf("Created Consumer %v\n", consumer)
+
+	err = consumer.SubscribeTopics(topics, nil)
+	//run := true
 }
