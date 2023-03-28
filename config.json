@@ -87,11 +87,11 @@
                         "kvs": [
                             {
                                 "key": "brokers",
-                                "value": "10.2.126.101:9092"
+                                "value": "10.54.165.53:9092"
                             },
                             {
                                 "key": "topics",
-                                "value": "paragon.insights.byoi.ingest"
+                                "value": "cisco"
                             }
                         ]
                     }
