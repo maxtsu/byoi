@@ -47,9 +47,9 @@ func main() {
 		// when using localhost brokers on OSX, since the OSX resolver
 		// will return the IPv6 addresses first.
 		// You typically don't need to specify this configuration property.
-		"broker.address.family": "v4",
-		"group.id":              group,
-		"session.timeout.ms":    6000,
+		//"broker.address.family": "v4",
+		"group.id":           group,
+		"session.timeout.ms": 6000,
 		// Start reading from the first message of each assigned
 		// partition if there are no previously committed offsets
 		// for this group.
@@ -105,7 +105,8 @@ func main() {
 				// the application if all brokers are down.
 				fmt.Fprintf(os.Stderr, "%% Error: %v: %v\n", message.Code(), message)
 				if message.Code() == kafka.ErrAllBrokersDown {
-					run = false
+					// we may put in a time sleep here if no broker
+					//run = false
 				}
 			default:
 				fmt.Printf("Ignored %v\n", message)
