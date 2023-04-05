@@ -6,8 +6,8 @@ package main
 // influxdb point write
 
 import (
+	"byoi/configjson"
 	"fmt"
-	"maxwell/configjson"
 	"os"
 	"os/signal"
 	"syscall"
@@ -16,8 +16,9 @@ import (
 )
 
 // the plugin config.json file
-// var configfile = "/etc/byoi/config.json"
-var configfile = "config.json"
+var configfile = "/etc/byoi/config.json"
+
+//var configfile = "config.json"
 
 func main() {
 	fmt.Println("HelloWorld!")
