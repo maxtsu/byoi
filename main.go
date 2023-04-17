@@ -10,10 +10,11 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 )
 
+// var configfile = "/etc/byoi/config.json"
 var configfile = "config.json"
 
 func main() {
-	fmt.Println("HelloWorld!")
+	fmt.Println("HelloWorld! version2")
 
 	//convert the config.json to a struct
 	configjson.ConfigJSON(configfile)
@@ -61,6 +62,7 @@ func main() {
 
 	run := true
 	for run {
+		fmt.Printf("waiting for kafka message")
 		select {
 		case sig := <-sigchan:
 			fmt.Printf("Caught signal %v: terminating\n", sig)
