@@ -99,8 +99,7 @@ func main() {
 					e.TopicPartition, string(e.Value))
 				kafkaMessage := string(e.Value)
 
-				sp := source_prefix{}
-				sp = get_source_prefix(kafkaMessage)
+				sp := get_source_prefix(kafkaMessage)
 
 				json.Unmarshal([]byte(kafkaMessage), &m)
 				fmt.Printf("message struct: %+v\n", m)
