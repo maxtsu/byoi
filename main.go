@@ -98,6 +98,8 @@ func main() {
 				fmt.Printf("%% Message on %s:\n%s\n",
 					e.TopicPartition, string(e.Value))
 				kafkaMessage := string(e.Value)
+
+				sp := source_prefix{}
 				sp = get_source_prefix(kafkaMessage)
 
 				json.Unmarshal([]byte(kafkaMessage), &m)
