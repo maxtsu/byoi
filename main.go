@@ -82,7 +82,7 @@ func main() {
 	run := true
 	for run {
 		fmt.Printf("waiting for kafka message\n")
-		time.Sleep(4 * time.Second)
+		time.Sleep(2 * time.Second)
 		select {
 		case sig := <-sigchan:
 			fmt.Printf("Caught signal %v: terminating\n", sig)
@@ -90,7 +90,7 @@ func main() {
 		default:
 			// Poll the consumer for messages or events
 			m := Message{}
-			event := consumer.Poll(100)
+			event := consumer.Poll(400)
 			if event == nil {
 				continue
 			}
@@ -101,7 +101,7 @@ func main() {
 					e.TopicPartition, string(e.Value))
 				kafkaMessage := string(e.Value)
 
-				sp := get_source_prefix(kafkaMessage)
+				//sp := get_source_prefix(kafkaMessage)
 
 				json.Unmarshal([]byte(kafkaMessage), &m)
 				fmt.Printf("message struct: %+v\n", m)
