@@ -133,6 +133,7 @@ func ConfigJSON(configfile string) {
 }
 
 // Function to return array/slice of device details from config.json
+// not required
 func GetDevices(devices []Device) []Device_item {
 	// create slice of devices
 	device_items := []Device_item{}

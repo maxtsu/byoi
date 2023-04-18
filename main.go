@@ -44,10 +44,12 @@ func main() {
 	fmt.Println("this is the topics: " + brokertopic[1])
 
 	devices := configjson.Configuration.Hbin.Inputs[0].Plugin.Config.Device
+	fmt.Println("Devices %s", devices)
+
 	// Call to get array of structs with device details
-	list_devices := configjson.GetDevices(devices)
-	fmt.Println("devices ")
-	fmt.Println(list_devices[0].DeviceName)
+	// list_devices := configjson.GetDevices(devices)
+	//fmt.Println("devices ")
+	//fmt.Println(list_devices[0].DeviceName)
 
 	bootstrapServers := brokertopic[0]
 	group := "byoi"
@@ -56,13 +58,7 @@ func main() {
 	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
 
 	consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
-		"bootstrap.servers": bootstrapServers,
-		// Avoid connecting to IPv6 brokers:
-		// This is needed for the ErrAllBrokersDown show-case below
-		// when using localhost brokers on OSX, since the OSX resolver
-		// will return the IPv6 addresses first.
-		// You typically don't need to specify this configuration property.
-		//"broker.address.family": "v4",
+		"bootstrap.servers":  bootstrapServers,
 		"group.id":           group,
 		"session.timeout.ms": 6000,
 		// Start reading from the first message of each assigned
@@ -140,21 +136,21 @@ func main() {
 }
 
 type source_prefix struct {
-	Source  string
-	Prefix  string
-	Updates []path
+	Source  string `json:"source"`
+	Prefix  string `json:"prefix"`
+	Updates []path `json:"updates"`
 }
 
 type path struct {
-	Path string
+	Path string `json:"Path"`
 }
 
 func get_source_prefix(message string) source_prefix {
 	m := source_prefix{}
 	fmt.Printf("Message: %s", message)
 	json.Unmarshal([]byte(message), &m)
-	println("Source: %s", m.Source)
-	println("Prefix: %s", m.Prefix)
-	println("Prefix: %s", m.Updates[0].Path)
+	println("source: %s", m.Source)
+	println("prefix: %s", m.Prefix)
+	println("Updates: %s", m.Updates[0].Path)
 	return m
 }
