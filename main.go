@@ -10,12 +10,29 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 )
 
-// var configfile = "/etc/byoi/config.json"
-var configfile = "config.json"
+var configfile = "/etc/byoi/config.json"
+
+//var configfile = "config.json"
+
+// Message struct
+//{
+//	"source": "node14:57400",
+//	"subscription-name": "port_stats",
+//	"timestamp": 1677602769296000000,
+//	"time": "2023-02-28T16:46:09.296Z",
+//	"prefix": "openconfig-interfaces:",
+//	"updates": [
+
+type Message struct {
+	Source            string `json:"source"`
+	Subscription_name int64  `json:"subscription-name"`
+	Timestamp         int64  `json:"timestamp"`
+	Time              string `json:"time"`
+	Prefix            string `json:"prefix"`
+	Updates           string `json:"updates"`
+}
 
 func main() {
-	fmt.Println("HelloWorld! version2")
-
 	//convert the config.json to a struct
 	configjson.ConfigJSON(configfile)
 
@@ -68,17 +85,21 @@ func main() {
 			fmt.Printf("Caught signal %v: terminating\n", sig)
 			run = false
 		default:
-			ev := consumer.Poll(100)
-			if ev == nil {
+			// Poll the consumer for messages or events
+			event := consumer.Poll(100)
+			if event == nil {
 				continue
 			}
-			switch e := ev.(type) {
+			switch e := event.(type) {
 			case *kafka.Message:
 				// Process the message received.
 				fmt.Printf("%% Message on %s:\n%s\n",
 					e.TopicPartition, string(e.Value))
 				if e.Headers != nil {
+					kafkaMessage := e.Headers
 					fmt.Printf("%% Headers: %v\n", e.Headers)
+					fmt.Printf("kafkamessage: %v", kafkaMessage)
+
 				}
 				// We can store the offsets of the messages manually or let
 				// the library do it automatically based on the setting
@@ -96,7 +117,7 @@ func main() {
 				// Errors should generally be considered
 				// informational, the client will try to
 				// automatically recover.
-				// But in this example we choose to terminate
+				// In this example we choose to terminate
 				// the application if all brokers are down.
 				fmt.Fprintf(os.Stderr, "%% Error: %v: %v\n", e.Code(), e)
 				if e.Code() == kafka.ErrAllBrokersDown {
