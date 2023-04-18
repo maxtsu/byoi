@@ -105,7 +105,7 @@ func main() {
 
 				json.Unmarshal([]byte(kafkaMessage), &m)
 				fmt.Printf("message struct: %+v\n", m)
-				fmt.Printf("sp struct: %+v\n", sp)
+				//fmt.Printf("sp struct: %+v\n", sp)
 
 				if e.Headers != nil {
 					fmt.Printf("%% Headers: %v\n", e.Headers)
