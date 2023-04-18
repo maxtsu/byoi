@@ -3,7 +3,6 @@ FROM golang:1.14.2-alpine as builder
 RUN apk add alpine-sdk
 
 WORKDIR / 
-
 COPY configjson configjson
 COPY main.go .
 COPY vendor .
@@ -14,5 +13,7 @@ RUN go mod download
 RUN GOOS=linux GOARCH=amd64 go build -o app -tags musl
 
 FROM alpine:latest as runner
+RUN mkdir /etc/byoi/
+copy config.json /etc/byoi/.
 WORKDIR /root/
 COPY --from=builder app .
