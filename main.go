@@ -98,6 +98,8 @@ func main() {
 				fmt.Printf("%% Message on %s:\n%s\n",
 					e.TopicPartition, string(e.Value))
 				kafkaMessage := string(e.Value)
+				sp = source_prefix(kafkaMessage)
+
 				json.Unmarshal([]byte(kafkaMessage), &m)
 				fmt.Printf("message struct: %+v\n", m)
 
@@ -131,4 +133,18 @@ func main() {
 			}
 		}
 	}
+}
+
+type get_source_prefix struct {
+	Source string
+	Prefix string
+}
+
+func source_prefix(message string) source_prefix {
+	m := get_source_prefix{}
+	fmt.Println("Message: %s\n", message)
+	json.Unmarshal([]byte(message), &m)
+	println("Source: %s", m.Source)
+	println("Prefix: %s", m.Prefix)
+	return m
 }
