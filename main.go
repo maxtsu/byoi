@@ -101,11 +101,11 @@ func main() {
 					e.TopicPartition, string(e.Value))
 				kafkaMessage := string(e.Value)
 
-				//sp := get_source_prefix(kafkaMessage)
+				sp := get_source_prefix(kafkaMessage)
 
 				json.Unmarshal([]byte(kafkaMessage), &m)
 				fmt.Printf("message struct: %+v\n", m)
-				//fmt.Printf("sp struct: %+v\n", sp)
+				fmt.Printf("sp struct: %+v\n", sp)
 
 				if e.Headers != nil {
 					fmt.Printf("%% Headers: %v\n", e.Headers)
