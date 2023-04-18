@@ -95,11 +95,10 @@ func main() {
 				// Process the message received.
 				fmt.Printf("%% Message on %s:\n%s\n",
 					e.TopicPartition, string(e.Value))
+				kafkaMessage := string(e.Value)
+				fmt.Printf("kafkamessage: %v", kafkaMessage)
 				if e.Headers != nil {
-					kafkaMessage := e.Headers
 					fmt.Printf("%% Headers: %v\n", e.Headers)
-					fmt.Printf("kafkamessage: %v", kafkaMessage)
-
 				}
 				// We can store the offsets of the messages manually or let
 				// the library do it automatically based on the setting
