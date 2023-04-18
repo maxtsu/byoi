@@ -2,6 +2,7 @@ package main
 
 import (
 	"byoi/configjson"
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/signal"
@@ -86,6 +87,7 @@ func main() {
 			run = false
 		default:
 			// Poll the consumer for messages or events
+			m := Message{}
 			event := consumer.Poll(100)
 			if event == nil {
 				continue
@@ -96,7 +98,10 @@ func main() {
 				fmt.Printf("%% Message on %s:\n%s\n",
 					e.TopicPartition, string(e.Value))
 				kafkaMessage := string(e.Value)
-				fmt.Printf("kafkamessage: %v", kafkaMessage)
+				fmt.Printf("\nkafkamessage: %v\n", kafkaMessage)
+				json.Unmarshal([]byte(kafkaMessage), &m)
+				fmt.Printf("message struct: %+v\n", m)
+
 				if e.Headers != nil {
 					fmt.Printf("%% Headers: %v\n", e.Headers)
 				}
