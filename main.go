@@ -26,7 +26,7 @@ var configfile = "/etc/byoi/config.json"
 
 type Message struct {
 	Source            string `json:"source"`
-	Subscription_name int64  `json:"subscription-name"`
+	Subscription_name string `json:"subscription-name"`
 	Timestamp         int64  `json:"timestamp"`
 	Time              string `json:"time"`
 	Prefix            string `json:"prefix"`
@@ -98,7 +98,6 @@ func main() {
 				fmt.Printf("%% Message on %s:\n%s\n",
 					e.TopicPartition, string(e.Value))
 				kafkaMessage := string(e.Value)
-				fmt.Printf("\nkafkamessage: %v\n", kafkaMessage)
 				json.Unmarshal([]byte(kafkaMessage), &m)
 				fmt.Printf("message struct: %+v\n", m)
 
