@@ -141,7 +141,7 @@ type source_prefix struct {
 }
 
 func get_source_prefix(message string) source_prefix {
-	m := get_source_prefix{}
+	m := source_prefix{}
 	fmt.Println("Message: %s\n", message)
 	json.Unmarshal([]byte(message), &m)
 	println("Source: %s", m.Source)
