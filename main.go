@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 )
@@ -81,6 +82,7 @@ func main() {
 	run := true
 	for run {
 		fmt.Printf("waiting for kafka message\n")
+		duration := time.Duration(4) * time.Second
 		select {
 		case sig := <-sigchan:
 			fmt.Printf("Caught signal %v: terminating\n", sig)
