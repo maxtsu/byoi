@@ -12,9 +12,8 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 )
 
-var configfile = "/etc/byoi/config.json"
-
-//var configfile = "config.json"
+// var configfile = "/etc/byoi/config.json"
+var configfile = "config.json"
 
 // Message struct
 //{
@@ -43,13 +42,8 @@ func main() {
 	fmt.Println("this is the broker: " + brokertopic[0])
 	fmt.Println("this is the topics: " + brokertopic[1])
 
+	//list of devices from configjson
 	devices := configjson.Configuration.Hbin.Inputs[0].Plugin.Config.Device
-	fmt.Println("Devices %s", devices)
-
-	// Call to get array of structs with device details
-	// list_devices := configjson.GetDevices(devices)
-	//fmt.Println("devices ")
-	//fmt.Println(list_devices[0].DeviceName)
 
 	bootstrapServers := brokertopic[0]
 	group := "byoi"
@@ -97,11 +91,20 @@ func main() {
 					e.TopicPartition, string(e.Value))
 				kafkaMessage := string(e.Value)
 
-				sp := get_source_prefix(kafkaMessage)
+				//sp := get_source_prefix(kafkaMessage)
 
 				json.Unmarshal([]byte(kafkaMessage), &m)
 				fmt.Printf("message struct: %+v\n", m)
 				fmt.Printf("sp struct: %+v\n", sp)
+
+				//Start matching message to configured rules
+				m := message_root{}
+				for _, d := range devices {
+					fmt.Println("Device: ", d.SystemID)
+					if (d.SystemID == m.Source) && (d.Prefix == m.Prefix) {
+						fmt.Printf("name and prefix match ")
+					}
+				}
 
 				if e.Headers != nil {
 					fmt.Printf("%% Headers: %v\n", e.Headers)
@@ -135,18 +138,19 @@ func main() {
 	}
 }
 
-type source_prefix struct {
-	Source  string `json:"source"`
-	Prefix  string `json:"prefix"`
-	Updates []path `json:"updates"`
+// Struct describes root of openconfig message
+type message_root struct {
+	Source  string    `json:"source"`
+	Prefix  string    `json:"prefix"`
+	Updates []updates `json:"updates"`
 }
 
-type path struct {
+type updates struct {
 	Path string `json:"Path"`
 }
 
-func get_source_prefix(message string) source_prefix {
-	m := source_prefix{}
+func get_source_prefix_path(message string) message_root {
+	m := message_root{}
 	fmt.Printf("Message: %s", message)
 	json.Unmarshal([]byte(message), &m)
 	println("source: %s", m.Source)

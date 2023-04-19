@@ -132,8 +132,7 @@ func ConfigJSON(configfile string) {
 	json.Unmarshal(byteResult, &Configuration)
 }
 
-// Function to return array/slice of device details from config.json
-// not required
+// Function to return array of device details from config.json
 func GetDevices(devices []Device) []Device_item {
 	// create slice of devices
 	device_items := []Device_item{}
@@ -153,7 +152,9 @@ func GetDevices(devices []Device) []Device_item {
 			device_items = append(device_items, d)
 		}
 	}
-	return device_items
+	l := len(device_items)
+	var device_array [l]Device_item
+	return device_array
 }
 
 func KVS_parsing(keys []KVS, keyString []string) []string {
