@@ -95,7 +95,6 @@ func main() {
 
 				json.Unmarshal([]byte(kafkaMessage), &m)
 				fmt.Printf("message struct: %+v\n", m)
-				fmt.Printf("sp struct: %+v\n", sp)
 
 				//Start matching message to configured rules
 				m := message_root{}
