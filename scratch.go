@@ -23,10 +23,6 @@ type Updates struct {
 	Values json.RawMessage `json:"values"`
 }
 
-func PrintThis() {
-	fmt.Println("printing this")
-}
-
 // main function
 func main() {
 	// json file
@@ -45,7 +41,6 @@ func main() {
 	prefix := msg.Prefix
 	fmt.Printf("prefix %s\n", prefix)
 	ExampleClient_query()
-	PrintThis()
 }
 
 // start a new client
@@ -63,5 +58,7 @@ func ExampleClient_query() {
 	q := client.NewQuery("SELECT count(value) FROM cpu_load", "mydb", "")
 	if response, err := c.Query(q); err == nil && response.Error() == nil {
 		fmt.Println(response.Results)
+	} else {
+		fmt.Printf("not in DB\n")
 	}
 }
