@@ -30,7 +30,7 @@ func main() {
 
 	byteResult := gnfingest.ReadFile(sample)
 
-	fmt.Printf(string(byteResult))
+	//fmt.Printf(string(byteResult))
 	//unmarshall to struct
 	var msg Message
 	err := json.Unmarshal(byteResult, &msg)
@@ -49,6 +49,7 @@ func ExampleClient_query() {
 	c, err := client.NewHTTPClient(client.HTTPConfig{
 		Addr: "http://10.54.182.2:8086",
 	})
+	fmt.Printf("opening client")
 	if err != nil {
 		fmt.Println("Error creating InfluxDB Client: ", err.Error())
 	}
