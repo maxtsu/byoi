@@ -64,5 +64,6 @@ func main() {
 	fmt.Printf("prefix %s\n", prefix)
 	ExampleClient_query()
 	PrintThis()
+	fmt.Printf("where am i")
 
 }
