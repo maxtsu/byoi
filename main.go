@@ -1,53 +1,47 @@
 package main
 
 import (
-	"byoi/configjson"
+	"byoi/gnfingest"
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
 	"github.com/confluentinc/confluent-kafka-go/kafka"
+	"github.com/influxdata/influxdb/client/v2"
 )
 
 // var configfile = "/etc/byoi/config.json"
 var configfile = "config.json"
 
-// Message struct
-//{
-//	"source": "node14:57400",
-//	"subscription-name": "port_stats",
-//	"timestamp": 1677602769296000000,
-//	"time": "2023-02-28T16:46:09.296Z",
-//	"prefix": "openconfig-interfaces:",
-//	"updates": [
-
-type Message struct {
-	Source            string `json:"source"`
-	Subscription_name string `json:"subscription-name"`
-	Timestamp         int64  `json:"timestamp"`
-	Time              string `json:"time"`
-	Prefix            string `json:"prefix"`
-	Updates           string `json:"updates"`
-}
-
 func main() {
 	//convert the config.json to a struct
-	configjson.ConfigJSON(configfile)
-
+	byteResult := gnfingest.ReadFile(configfile)
+	var configuration gnfingest.JSONfile
+	err := json.Unmarshal(byteResult, &configuration)
+	if err != nil {
+		fmt.Println("Unmarshall error", err)
+	}
 	// extract the brokers and topics from the configjson KVS
-	brokertopic := configjson.KVS_parsing(configjson.Configuration.Hbin.Inputs[0].Plugin.Config.KVS, []string{"brokers", "topics"})
+	brokertopic := gnfingest.KVS_parsing(configuration.Hbin.Inputs[0].Plugin.Config.KVS, []string{"brokers", "topics"})
+
 	fmt.Println("this is the broker: " + brokertopic[0])
 	fmt.Println("this is the topics: " + brokertopic[1])
 
-	//list of devices from configjson
-	devices := configjson.Configuration.Hbin.Inputs[0].Plugin.Config.Device
-
+	//list of devices configuration from configjson
 	bootstrapServers := brokertopic[0]
 	group := "byoi"
 	topics := []string{brokertopic[1]}
+	devices := configuration.Hbin.Inputs[0].Plugin.Config.Device
+	//list of device key values under sensor for searching messages
+	keys := []string{"prefix", "path"}
+	device_keys := gnfingest.DeviceDetails(devices, keys)
+
+	fmt.Printf("Device-Keys %+v\n", device_keys)
+
 	sigchan := make(chan os.Signal, 1)
 	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
 
@@ -69,7 +63,8 @@ func main() {
 	fmt.Printf("Created Consumer %v\n", consumer)
 	err = consumer.SubscribeTopics(topics, nil)
 
-	run := true
+	//run := true
+	run := false
 	for run {
 		fmt.Printf("waiting for kafka message\n")
 		time.Sleep(2 * time.Second)
@@ -79,7 +74,7 @@ func main() {
 			run = false
 		default:
 			// Poll the consumer for messages or events
-			m := Message{}
+			m := gnfingest.Message{}
 			event := consumer.Poll(400)
 			if event == nil {
 				continue
@@ -97,10 +92,10 @@ func main() {
 				fmt.Printf("message struct: %+v\n", m)
 
 				//Start matching message to configured rules
-				m := message_root{}
-				for _, d := range devices {
-					fmt.Println("Device: ", d.SystemID)
-					if (d.SystemID == m.Source) && (d.Prefix == m.Prefix) {
+				//m := message_root{}
+				for _, d := range device_keys {
+					fmt.Println("Device: ", d.DeviceName)
+					if (d.DeviceName == m.Source) && (d.KVS_prefix == m.Prefix) {
 						fmt.Printf("name and prefix match ")
 					}
 				}
@@ -135,25 +130,101 @@ func main() {
 			}
 		}
 	}
+
+	// Processing sample message
+	//var sample = "Sample4.json"
+	//var sample = "Sample20.json"
+	var sample = "interface-state.json"
+	//var sample = "isis-1.json"
+	byteResult = gnfingest.ReadFile(sample)
+	var kafkaMessage gnfingest.Message
+	err = json.Unmarshal(byteResult, &kafkaMessage)
+	if err != nil {
+		fmt.Println("Unmarshall error", err)
+	}
+
+	// extract source and prefix
+	fmt.Println("source: %s", kafkaMessage.Source)
+	fmt.Println("prefix: %s", kafkaMessage.Prefix)
+	fmt.Println("path: %s", kafkaMessage.Updates[0].Path)
+
+	// parse to extract path & indexes from "Path:" value in message
+	var result []string
+	var k1 = make(map[string][]gnfingest.KVS)
+	result, k1 = gnfingest.PathExtract(kafkaMessage.Updates[0].Path)
+	fmt.Println("path list: %+v\n", result)
+	fmt.Println("map of keys: %+v\n", k1)
+
+	// Test what struct branch is created
+	var ZeroValues gnfingest.Values
+	fmt.Printf("Message: %+v\n", kafkaMessage)
+	fmt.Printf("path: %+v\n", kafkaMessage.Updates[0].Values.State)
+
+	if kafkaMessage.Updates[0].Values.Counters != ZeroValues.Counters {
+		fmt.Println("This is counters message\n")
+	}
+	if kafkaMessage.Updates[0].Values.Isis.Interfaces.Interface.InterfaceID != ZeroValues.Isis.Interfaces.Interface.InterfaceID {
+		fmt.Println("This is isis message\n")
+		fmt.Printf("Message: %+v\n", kafkaMessage.Updates[0].Values.Isis)
+	}
+	if kafkaMessage.Updates[0].Values.State != ZeroValues.State {
+		fmt.Println("This is interface-state message\n")
+	}
 }
 
-// Struct describes root of openconfig message
-type message_root struct {
-	Source  string    `json:"source"`
-	Prefix  string    `json:"prefix"`
-	Updates []updates `json:"updates"`
+// Influx plugin
+type Influx struct {
+	Server          string `json:"server"`
+	Port            int    `json:"port"`
+	DBName          string `json:"dbname"`
+	User            string `json:"user"`
+	Password        string `json:"password"`
+	Measurement     string `json:"measurement"`
+	HTTPTimeout     int    `json:"http-timeout"`
+	RetentionPolicy string `json:"retention-policy"`
+	Recreate        bool   `json:"recreate"`
+	client          client.Client
+	logger          log.Logger
 }
 
-type updates struct {
-	Path string `json:"Path"`
+// This is the start of the JNPR version
+// Connect to the configured influxdb
+func (i *Influx) Connect() error {
+	fmt.Printf("message", "Connect() influx output plugin", "config", i)
+
+	addr := fmt.Sprintf("http://%v:%v", i.Server, i.Port)
+	c, err := newClientFunc(client.HTTPConfig{
+		Addr:     addr,
+		Username: i.User,
+		Password: i.Password,
+		Timeout:  i.getHTTPTimeout(),
+	})
+
+	if err != nil {
+		return err
+	}
+
+	i.client = c
+
+	if i.DBName != "" {
+		if i.Recreate {
+			if _, err := queryIDB(c, fmt.Sprintf("DROP DATABASE \"%s\"", i.DBName), i.DBName); err != nil {
+				i.logger.Log("message", "Connect():  influx failed to drop table", "error", err) // nolint: errcheck
+				return err
+			}
+		}
+		if _, err = queryIDB(c, fmt.Sprintf("CREATE DATABASE \"%s\"", i.DBName), i.DBName); err != nil {
+			i.logger.Log("message", "Connect() influx failed to create database", "error", err) // nolint: errcheck
+			return err
+		}
+	}
+
+	return nil
 }
 
-func get_source_prefix_path(message string) message_root {
-	m := message_root{}
-	fmt.Printf("Message: %s", message)
-	json.Unmarshal([]byte(message), &m)
-	println("source: %s", m.Source)
-	println("prefix: %s", m.Prefix)
-	println("Updates: %s", m.Updates[0].Path)
-	return m
+// Close connection
+func (i *Influx) Close() error {
+	i.logger.Log("message", "closing influx output plugin with config", "config", i) // nolint: errcheck
+	i.client.Close()
+	return nil
 }

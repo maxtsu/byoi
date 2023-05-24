@@ -1,0 +1,29 @@
+{
+  "source": "10.213.94.44:57400",
+  "subscription-name": "default-1683377340",
+  "timestamp": 1683377545465000000,
+  "time": "2023-05-06T12:52:25.465Z",
+  "prefix": "openconfig-interfaces:",
+  "updates": [
+    {
+      "Path": "interfaces/interface[name=Bundle-Ether1]/state",
+      "values": {
+        "interfaces/interface/state": {
+          "admin-status": "UP",
+          "counters": {
+            "carrier-transitions": "0"
+          },
+          "enabled": true,
+          "ifindex": 16,
+          "last-change": "0",
+          "logical": true,
+          "loopback-mode": false,
+          "mtu": 1500,
+          "name": "Bundle-Ether1",
+          "oper-status": "DOWN",
+          "type": "iana-if-type:ieee8023adLag"
+        }
+      }
+    }
+  ]
+}

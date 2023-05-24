@@ -1,0 +1,54 @@
+{
+  "source": "node14:57400",
+  "subscription-name": "port_stats",
+  "timestamp": 1677602769296000000,
+  "time": "2023-02-28T16:46:09.296Z",
+  "prefix": "openconfig-interfaces:",
+  "updates": [
+    {
+      "Path": "interfaces/interface[name=GigabitEthernet0/0/0/0]/state",
+      "values": {
+        "interfaces/interface/state": {
+          "admin-status": "UP",
+          "counters": {
+            "in-broadcast-pkts": "0",
+            "in-discards": "0",
+            "in-errors": 0,
+            "in-fcs-errors": "0",
+            "in-multicast-pkts": "0",
+            "in-octets": "7735645",
+            "in-pkts": "5299",
+            "in-unicast-pkts": "5299",
+            "in-unknown-protos": "0",
+            "out-broadcast-pkts": "0",
+            "out-discards": "0",
+            "out-errors": 0,
+            "out-multicast-pkts": "0",
+            "out-octets": "7671320",
+            "out-pkts": "5285",
+            "out-unicast-pkts": "5285"
+          },
+          "enabled": true,
+          "ifindex": 6,
+          "last-change": "1677558620241116037",
+          "logical": false,
+          "loopback-mode": false,
+          "mtu": 1514,
+          "name": "GigabitEthernet0/0/0/0",
+          "oper-status": "UP",
+          "vrf": {
+            "established-neighbors-count": 7,
+            "neighbors-count": 7,
+            "network-count": 7,
+            "notifications-received": 0,
+            "notifications-sent": 0,
+            "path-count": 7,
+            "update-messages-received": 1,
+            "update-messages-sent": 7
+          },
+          "type": "iana-if-type:ethernetCsmacd"
+        }
+      }
+    }
+  ]
+}

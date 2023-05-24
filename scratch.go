@@ -1,74 +1,58 @@
 package main
 
 import (
-	"byoi/configjson"
+	"byoi/gnfingest"
 	"encoding/json"
 	"fmt"
+	"reflect"
 )
 
-// var configfile = "/etc/byoi/config.json"
-var configfile = "config.json"
-
-// Message struct
-//{
-//	"source": "node14:57400",
-//	"subscription-name": "port_stats",
-//	"timestamp": 1677602769296000000,
-//	"time": "2023-02-28T16:46:09.296Z",
-//	"prefix": "openconfig-interfaces:",
-//	"updates": [
-
+// declaring a struct
 type Message struct {
-	Source            string `json:"source"`
-	Subscription_name string `json:"subscription-name"`
-	Timestamp         int64  `json:"timestamp"`
-	Time              string `json:"time"`
-	Prefix            string `json:"prefix"`
-	Updates           string `json:"updates"`
+	Source           string    `json:"source"`
+	SubscriptionName string    `json:"subscription-name"`
+	Timestamp        int64     `json:"timestamp"`
+	Time             string    `json:"time"`
+	Prefix           string    `json:"prefix"`
+	Updates          []Updates `json:"updates"`
 }
 
+type Updates struct {
+	Path   string          `json:"path"`
+	Values json.RawMessage `json:"values"`
+}
+
+// main function
 func main() {
-	//convert the config.json to a struct
-	configjson.ConfigJSON(configfile)
+	// json file
+	var sample = "Sample4.json"
 
-	// extract the brokers and topics from the configjson KVS
-	brokertopic := configjson.KVS_parsing(configjson.Configuration.Hbin.Inputs[0].Plugin.Config.KVS, []string{"brokers", "topics"})
-	fmt.Println("this is the broker: " + brokertopic[0])
-	fmt.Println("this is the topics: " + brokertopic[1])
+	byteResult := gnfingest.ReadFile(sample)
 
-	devices := configjson.Configuration.Hbin.Inputs[0].Plugin.Config.Device
-	device_array := configjson.GetDevices(devices)
-	fmt.Println("array %s", device_array)
-
-	bootstrapServers := brokertopic[0]
-	topics := []string{brokertopic[1]}
-
-	fmt.Println("bootstrap: %s", bootstrapServers)
-	fmt.Println("topics: %s", topics)
-
-	for _, d := range devices {
-		fmt.Println("Device: ", d.SystemID)
-		fmt.Println("Path: ", d.Sensor)
+	fmt.Printf(string(byteResult))
+	//unmarshall to struct
+	var msg Message
+	err := json.Unmarshal(byteResult, &msg)
+	if err != nil {
+		panic(err)
 	}
+	//values in message
+	prefix := msg.Prefix
+	fmt.Printf("prefix %s\n", prefix)
 
-}
+	path := msg.Updates[0].Path
+	fmt.Printf("path %s\n", path)
 
-type source_prefix struct {
-	Source  string `json:"source"`
-	Prefix  string `json:"prefix"`
-	Updates []path `json:"updates"`
-}
+	raw := msg.Updates[0].Values
 
-type path struct {
-	Path string `json:"Path"`
-}
+	var values map[string]interface{}
+	// Unmarshal or Decode the JSON to the interface.
+	json.Unmarshal([]byte(raw), &values)
+	// Print the data type
+	fmt.Println(reflect.TypeOf(values))
+	// Reading each value by its key
+	fmt.Println("values :", values)
 
-func get_source_prefix(message string) source_prefix {
-	m := source_prefix{}
-	fmt.Printf("Message: %s", message)
-	json.Unmarshal([]byte(message), &m)
-	println("source: %s", m.Source)
-	println("prefix: %s", m.Prefix)
-	println("Updates: %s", m.Updates[0].Path)
-	return m
+	gnfingest.Printme()
+
 }
