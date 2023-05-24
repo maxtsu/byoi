@@ -23,6 +23,24 @@ type Updates struct {
 	Values json.RawMessage `json:"values"`
 }
 
+// start a new client
+func ExampleClient_query() {
+	fmt.Printf("opening client")
+	c, err := client.NewHTTPClient(client.HTTPConfig{
+		Addr: "http://10.54.182.2:8086",
+	})
+	fmt.Printf("opened client")
+	if err != nil {
+		fmt.Println("Error creating InfluxDB Client: ", err.Error())
+	}
+	defer c.Close()
+
+	q := client.NewQuery("SELECT count(value) FROM cpu_load", "mydb", "")
+	if response, err := c.Query(q); err == nil && response.Error() == nil {
+		fmt.Println(response.Results)
+	}
+}
+
 // main function
 func main() {
 	// json file
@@ -42,22 +60,4 @@ func main() {
 	fmt.Printf("prefix %s\n", prefix)
 	ExampleClient_query()
 
-}
-
-// start a new client
-func ExampleClient_query() {
-	fmt.Printf("opening client")
-	c, err := client.NewHTTPClient(client.HTTPConfig{
-		Addr: "http://10.54.182.2:8086",
-	})
-	fmt.Printf("opened client")
-	if err != nil {
-		fmt.Println("Error creating InfluxDB Client: ", err.Error())
-	}
-	defer c.Close()
-
-	q := client.NewQuery("SELECT count(value) FROM cpu_load", "mydb", "")
-	if response, err := c.Query(q); err == nil && response.Error() == nil {
-		fmt.Println(response.Results)
-	}
 }
