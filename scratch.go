@@ -4,7 +4,8 @@ import (
 	"byoi/gnfingest"
 	"encoding/json"
 	"fmt"
-	"reflect"
+
+	client "github.com/influxdata/influxdb1-client/v2"
 )
 
 // declaring a struct
@@ -39,20 +40,22 @@ func main() {
 	//values in message
 	prefix := msg.Prefix
 	fmt.Printf("prefix %s\n", prefix)
+	ExampleClient_query()
 
-	path := msg.Updates[0].Path
-	fmt.Printf("path %s\n", path)
+}
 
-	raw := msg.Updates[0].Values
+// start a new client
+func ExampleClient_query() {
+	c, err := client.NewHTTPClient(client.HTTPConfig{
+		Addr: "http://10.54.182.2:8086",
+	})
+	if err != nil {
+		fmt.Println("Error creating InfluxDB Client: ", err.Error())
+	}
+	defer c.Close()
 
-	var values map[string]interface{}
-	// Unmarshal or Decode the JSON to the interface.
-	json.Unmarshal([]byte(raw), &values)
-	// Print the data type
-	fmt.Println(reflect.TypeOf(values))
-	// Reading each value by its key
-	fmt.Println("values :", values)
-
-	gnfingest.Printme()
-
+	q := client.NewQuery("SELECT count(value) FROM cpu_load", "mydb", "")
+	if response, err := c.Query(q); err == nil && response.Error() == nil {
+		fmt.Println(response.Results)
+	}
 }

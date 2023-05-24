@@ -4,14 +4,12 @@ import (
 	"byoi/gnfingest"
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
 	"github.com/confluentinc/confluent-kafka-go/kafka"
-	"github.com/influxdata/influxdb/client/v2"
 )
 
 // var configfile = "/etc/byoi/config.json"
@@ -170,61 +168,4 @@ func main() {
 	if kafkaMessage.Updates[0].Values.State != ZeroValues.State {
 		fmt.Println("This is interface-state message\n")
 	}
-}
-
-// Influx plugin
-type Influx struct {
-	Server          string `json:"server"`
-	Port            int    `json:"port"`
-	DBName          string `json:"dbname"`
-	User            string `json:"user"`
-	Password        string `json:"password"`
-	Measurement     string `json:"measurement"`
-	HTTPTimeout     int    `json:"http-timeout"`
-	RetentionPolicy string `json:"retention-policy"`
-	Recreate        bool   `json:"recreate"`
-	client          client.Client
-	logger          log.Logger
-}
-
-// This is the start of the JNPR version
-// Connect to the configured influxdb
-func (i *Influx) Connect() error {
-	fmt.Printf("message", "Connect() influx output plugin", "config", i)
-
-	addr := fmt.Sprintf("http://%v:%v", i.Server, i.Port)
-	c, err := newClientFunc(client.HTTPConfig{
-		Addr:     addr,
-		Username: i.User,
-		Password: i.Password,
-		Timeout:  i.getHTTPTimeout(),
-	})
-
-	if err != nil {
-		return err
-	}
-
-	i.client = c
-
-	if i.DBName != "" {
-		if i.Recreate {
-			if _, err := queryIDB(c, fmt.Sprintf("DROP DATABASE \"%s\"", i.DBName), i.DBName); err != nil {
-				i.logger.Log("message", "Connect():  influx failed to drop table", "error", err) // nolint: errcheck
-				return err
-			}
-		}
-		if _, err = queryIDB(c, fmt.Sprintf("CREATE DATABASE \"%s\"", i.DBName), i.DBName); err != nil {
-			i.logger.Log("message", "Connect() influx failed to create database", "error", err) // nolint: errcheck
-			return err
-		}
-	}
-
-	return nil
-}
-
-// Close connection
-func (i *Influx) Close() error {
-	i.logger.Log("message", "closing influx output plugin with config", "config", i) // nolint: errcheck
-	i.client.Close()
-	return nil
 }
