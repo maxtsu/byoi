@@ -46,10 +46,11 @@ func main() {
 
 // start a new client
 func ExampleClient_query() {
+	fmt.Printf("opening client")
 	c, err := client.NewHTTPClient(client.HTTPConfig{
 		Addr: "http://10.54.182.2:8086",
 	})
-	fmt.Printf("opening client")
+	fmt.Printf("opened client")
 	if err != nil {
 		fmt.Println("Error creating InfluxDB Client: ", err.Error())
 	}
