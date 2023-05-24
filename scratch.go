@@ -41,6 +41,10 @@ func ExampleClient_query() {
 	}
 }
 
+func PrintThis() {
+	fmt.Printf("printing this")
+}
+
 // main function
 func main() {
 	// json file
@@ -59,5 +63,6 @@ func main() {
 	prefix := msg.Prefix
 	fmt.Printf("prefix %s\n", prefix)
 	ExampleClient_query()
+	PrintThis()
 
 }
