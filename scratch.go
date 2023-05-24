@@ -42,7 +42,7 @@ func ExampleClient_query() {
 }
 
 func PrintThis() {
-	fmt.Printf("printing this")
+	fmt.Println("printing this")
 }
 
 // main function
@@ -64,6 +64,4 @@ func main() {
 	fmt.Printf("prefix %s\n", prefix)
 	ExampleClient_query()
 	PrintThis()
-	fmt.Printf("where am i")
-
 }
