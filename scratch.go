@@ -15,7 +15,6 @@ func main() {
 
 // start a new client
 func ExampleClient_query() {
-	fmt.Printf("opening client\n")
 	c, err := client.NewHTTPClient(client.HTTPConfig{
 		Addr: "http://10.54.182.2:8086",
 	})
@@ -27,8 +26,8 @@ func ExampleClient_query() {
 
 	// Create a new point batch
 	bp, _ := client.NewBatchPoints(client.BatchPointsConfig{
-		Database:  "BumbleBeeTuna",
-		Precision: "s",
+		Database: "TEST02",
+		//Precision: "s",
 	})
 
 	// Create a point and add to batch
