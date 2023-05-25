@@ -55,7 +55,7 @@ func ExampleClient_query() {
 	}
 	defer c.Close()
 
-	q := client.NewQuery("SELECT count(value) FROM cpu_load", "mydb", "")
+	q := client.NewQuery("SELECT * FROM external/bt-kafka/cisco_resources/byoi", "TEST01", "")
 	if response, err := c.Query(q); err == nil && response.Error() == nil {
 		fmt.Println(response.Results)
 	} else {
