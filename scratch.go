@@ -1,6 +1,8 @@
 package main
 
 import (
+	"byoi/gnfingest"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -9,12 +11,35 @@ import (
 
 // main function
 func main() {
+	var sample = "interface-state.json"
+	byteResult := gnfingest.ReadFile(sample)
+	var kafkaMessage gnfingest.Message
+	err := json.Unmarshal(byteResult, &kafkaMessage)
+	if err != nil {
+		fmt.Println("Unmarshall error", err)
+	}
+	// extract source and prefix
+	fmt.Printf("Message: %+v\n", kafkaMessage)
+	fmt.Println("source: %s", kafkaMessage.Source)
+	fmt.Println("timestamp: %s", kafkaMessage.Timestamp)
+	fmt.Println("prefix: %s", kafkaMessage.Prefix)
+	fmt.Println("path: %s", kafkaMessage.Updates[0].Path)
 
-	ExampleClient_query()
+	var source = kafkaMessage.Source
+	var timestamp = kafkaMessage.Timestamp
+
+	fmt.Printf("\ntimestamp: %+v\n", kafkaMessage.Timestamp)
+
+	unixTime := time.Unix(0, timestamp) //gives unix time stamp in utc
+
+	fmt.Println("unix time stamp in UTC :--->", unixTimeUTC)
+	fmt.Println("unix time stamp in unitTimeInRFC3339 format :->", unitTimeInRFC3339)
+
+	ExampleClient_query(source, unixTime)
 }
 
 // start a new client
-func ExampleClient_query() {
+func ExampleClient_query(source string, timestamp time.Time) {
 	c, err := client.NewHTTPClient(client.HTTPConfig{
 		Addr: "http://10.54.182.2:8086",
 	})
@@ -26,16 +51,15 @@ func ExampleClient_query() {
 
 	// Create a new point batch
 	bp, _ := client.NewBatchPoints(client.BatchPointsConfig{
-		Database: "TEST02",
+		Database: "TEST01",
 		//Precision: "s",
 	})
 
 	// Create a point and add to batch
-	tags := map[string]string{"cpu": "cpu-total"}
+	tags := map[string]string{"source": source}
 	fields := map[string]interface{}{
-		"idle":   10.1,
-		"system": 53.3,
-		"user":   46.6,
+		"admin-status": "UP",
+		"oper-status":  "DOWN",
 	}
 	pt, err := client.NewPoint("cpu_usage", tags, fields, time.Now())
 	if err != nil {
