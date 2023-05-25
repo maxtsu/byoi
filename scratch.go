@@ -4,24 +4,10 @@ import (
 	"byoi/gnfingest"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	client "github.com/influxdata/influxdb1-client/v2"
 )
-
-// declaring a struct
-type Message struct {
-	Source           string    `json:"source"`
-	SubscriptionName string    `json:"subscription-name"`
-	Timestamp        int64     `json:"timestamp"`
-	Time             string    `json:"time"`
-	Prefix           string    `json:"prefix"`
-	Updates          []Updates `json:"updates"`
-}
-
-type Updates struct {
-	Path   string          `json:"path"`
-	Values json.RawMessage `json:"values"`
-}
 
 // main function
 func main() {
@@ -55,10 +41,26 @@ func ExampleClient_query() {
 	}
 	defer c.Close()
 
-	q := client.NewQuery("SELECT * FROM \"external/bt-kafka/cisco_resources/byoi\"", "TEST01", "")
-	if response, err := c.Query(q); err == nil && response.Error() == nil {
-		fmt.Println(response.Results)
-	} else {
-		fmt.Printf("not in DB\n")
+	// Create a new point batch
+	bp, _ := client.NewBatchPoints(client.BatchPointsConfig{
+		Database:  "BumbleBeeTuna",
+		Precision: "s",
+	})
+
+	// Create a point and add to batch
+	tags := map[string]string{"cpu": "cpu-total"}
+	fields := map[string]interface{}{
+		"idle":   10.1,
+		"system": 53.3,
+		"user":   46.6,
 	}
+	pt, err := client.NewPoint("cpu_usage", tags, fields, time.Now())
+	if err != nil {
+		fmt.Println("Error: ", err.Error())
+	}
+	bp.AddPoint(pt)
+
+	// Write the batch
+	c.Write(bp)
+
 }
