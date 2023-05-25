@@ -1,8 +1,6 @@
 package main
 
 import (
-	"byoi/gnfingest"
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -11,21 +9,7 @@ import (
 
 // main function
 func main() {
-	// json file
-	var sample = "Sample4.json"
 
-	byteResult := gnfingest.ReadFile(sample)
-
-	//fmt.Printf(string(byteResult))
-	//unmarshall to struct
-	var msg Message
-	err := json.Unmarshal(byteResult, &msg)
-	if err != nil {
-		panic(err)
-	}
-	//values in message
-	prefix := msg.Prefix
-	fmt.Printf("prefix %s\n", prefix)
 	ExampleClient_query()
 }
 
