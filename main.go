@@ -105,7 +105,7 @@ func main() {
 			run = false
 		default:
 			// Poll the consumer for messages or events
-			//m := gnfingest.Message{}
+			m := gnfingest.Message{}
 			event := consumer.Poll(400)
 			if event == nil {
 				continue
