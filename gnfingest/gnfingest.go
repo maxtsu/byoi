@@ -81,15 +81,15 @@ type KVS struct {
 
 // struct defining device details ::-
 //
-//	-device name
-//	-kvs prefix
-//	-kvs path
-//	-measurement
-//	-database
+//		-device name
+//		-kvs path
+//	 -kvs rule-id
+//		-measurement
+//		-database
 type Device_Keys struct {
 	DeviceName  string
 	KVS_path    string
-	KVS_prefix  string
+	KVS_rule_id string
 	Measurement string
 	Database    string
 }
@@ -121,8 +121,8 @@ func DeviceDetails(devices []Device, keys []string) []Device_Keys {
 			dev.Measurement = s.Measurement
 			//extract the KVS pairs from sensor container
 			values := KVS_parsing(s.KVS, keys)
-			dev.KVS_prefix = values[0]
-			dev.KVS_path = values[1]
+			dev.KVS_path = values[0]
+			dev.KVS_rule_id = values[1]
 			device_keys = append(device_keys, dev)
 		}
 	}
@@ -207,4 +207,19 @@ type Points struct {
 type InterfaceStateFields struct {
 	Admin_status string `json:"admin-status"`
 	Oper_status  string `json:"oper-status"`
+}
+
+type RulesJSON struct {
+	Comment     string `json:"comment"`
+	RuleID      string `json:"rule-id"`
+	Path        string `json:"path"`
+	Prefix      string `json:"prefix"`
+	IndexValues []struct {
+		Path  string `json:"path"`
+		Index string `json:"index"`
+	} `json:"index_values"`
+	Fields []struct {
+		Path  []string `json:"path"`
+		Value []string `json:"value"`
+	} `json:"fields"`
 }

@@ -7,9 +7,67 @@
         "inputs": [
             {
                 "plugin": {
-                    "name": "MDT-Kafka-Json",
+                    "name": "kafkaingest2",
                     "config": {
                         "device": [
+                            {
+                                "name": "10.213.97.124",
+                                "sensor": [
+                                    {
+                                        "name": "external/cisco-check-interface-state-oc/interface_state",
+                                        "kvs": [
+                                            {
+                                                "key": "path",
+                                                "value": "interfaces/interface/state"
+                                            },
+                                            {
+                                                "key": "rule-id",
+                                                "value": "interface-state"
+                                            }
+                                        ],
+                                        "measurement": "external/cisco-check-interface-state-oc/interface_state/byoi"
+                                    },
+                                    {
+                                        "name": "external/cisco-check-system-cpu-mdt/cpu_utilization",
+                                        "kvs": [
+                                            {
+                                                "key": "path",
+                                                "value": "system-monitoring/cpu-utilization"
+                                            },
+                                            {
+                                                "key": "rule-id",
+                                                "value": "chassis-cpu-mdt"
+                                            }
+                                        ],
+                                        "measurement": "external/cisco-check-system-cpu-mdt/cpu_utilization/byoi"
+                                    },
+                                    {
+                                        "name": "external/cisco-check-interface-traffic-health-oc/interface_stats_health",
+                                        "kvs": [
+                                            {
+                                                "key": "path",
+                                                "value": "interfaces/interface/state/counters"
+                                            },
+                                            {
+                                                "key": "rule-id",
+                                                "value": "interface-traffic"
+                                            }
+                                        ],
+                                        "measurement": "external/cisco-check-interface-traffic-health-oc/interface_stats_health/byoi"
+                                    }
+                                ],
+                                "authentication": {
+                                    "password": {
+                                        "password": "$9$2TaJD5T39tOZU39AtOBxN-w4aDik",
+                                        "username": "cisco"
+                                    }
+                                },
+                                "healthbot-storage": {
+                                    "database": "hb-default:Cisco-virtual:node10",
+                                    "retention-policy": "hb-default:Cisco-virtual:node10"
+                                },
+                                "system-id": "10.213.94.52"
+                            },
                             {
                                 "name": "10.213.97.127",
                                 "sensor": [
@@ -21,38 +79,124 @@
                                                 "value": "interfaces/interface/state"
                                             },
                                             {
-                                                "key": "prefix",
-                                                "value": "openconfig-interfaces:"
+                                                "key": "rule-id",
+                                                "value": "interface-state"
                                             }
                                         ],
                                         "measurement": "external/cisco-check-interface-state-oc/interface_state/byoi"
                                     },
                                     {
-                                        "name": "external/cisco-check-interface-traffic-oc/interface_stats",
+                                        "name": "external/cisco-check-system-cpu-mdt/cpu_utilization",
+                                        "kvs": [
+                                            {
+                                                "key": "path",
+                                                "value": "system-monitoring/cpu-utilization"
+                                            },
+                                            {
+                                                "key": "rule-id",
+                                                "value": "chassis-cpu-mdt"
+                                            }
+                                        ],
+                                        "measurement": "external/cisco-check-system-cpu-mdt/cpu_utilization/byoi"
+                                    },
+                                    {
+                                        "name": "external/cisco-check-interface-traffic-health-oc/interface_stats_health",
                                         "kvs": [
                                             {
                                                 "key": "path",
                                                 "value": "interfaces/interface/state/counters"
                                             },
                                             {
-                                                "key": "prefix",
-                                                "value": "openconfig-interfaces:"
+                                                "key": "rule-id",
+                                                "value": "interface-traffic"
                                             }
                                         ],
-                                        "measurement": "external/cisco-check-interface-traffic-oc/interface_stats/byoi"
+                                        "measurement": "external/cisco-check-interface-traffic-health-oc/interface_stats_health/byoi"
+                                    },
+                                    {
+                                        "name": "external/cisco-check-system-memory-oc/system_memory",
+                                        "kvs": [
+                                            {
+                                                "key": "path",
+                                                "value": "components/component/state"
+                                            },
+                                            {
+                                                "key": "rule-id",
+                                                "value": "chassis-memory"
+                                            }
+                                        ],
+                                        "measurement": "external/cisco-check-system-memory-oc/system_memory/byoi"
                                     }
                                 ],
                                 "authentication": {
                                     "password": {
-                                        "password": "$9$sQ4oGPfz6CuaZz69Cu0Lx7V24GDi",
+                                        "password": "$9$pXlzB1hW87Vs4IE7Vws4oz3nC0BhSr",
                                         "username": "cisco"
                                     }
                                 },
                                 "healthbot-storage": {
-                                    "database": "hb-default:Cisco:node14",
-                                    "retention-policy": "hb-default:Cisco:node14"
+                                    "database": "hb-default:Cisco-virtual:node14",
+                                    "retention-policy": "hb-default:Cisco-virtual:node14"
                                 },
                                 "system-id": "node14"
+                            },
+                            {
+                                "name": "10.213.97.125",
+                                "sensor": [
+                                    {
+                                        "name": "external/cisco-check-interface-state-oc/interface_state",
+                                        "kvs": [
+                                            {
+                                                "key": "path",
+                                                "value": "interfaces/interface/state"
+                                            },
+                                            {
+                                                "key": "rule-id",
+                                                "value": "interface-state"
+                                            }
+                                        ],
+                                        "measurement": "external/cisco-check-interface-state-oc/interface_state/byoi"
+                                    },
+                                    {
+                                        "name": "external/cisco-check-system-cpu-mdt/cpu_utilization",
+                                        "kvs": [
+                                            {
+                                                "key": "path",
+                                                "value": "system-monitoring/cpu-utilization"
+                                            },
+                                            {
+                                                "key": "rule-id",
+                                                "value": "chassis-cpu-mdt"
+                                            }
+                                        ],
+                                        "measurement": "external/cisco-check-system-cpu-mdt/cpu_utilization/byoi"
+                                    },
+                                    {
+                                        "name": "external/cisco-check-interface-traffic-health-oc/interface_stats_health",
+                                        "kvs": [
+                                            {
+                                                "key": "path",
+                                                "value": "interfaces/interface/state/counters"
+                                            },
+                                            {
+                                                "key": "rule-id",
+                                                "value": "interface-traffic"
+                                            }
+                                        ],
+                                        "measurement": "external/cisco-check-interface-traffic-health-oc/interface_stats_health/byoi"
+                                    }
+                                ],
+                                "authentication": {
+                                    "password": {
+                                        "password": "$9$dGsYokqfznC24fz3nCAvW87bsoJG",
+                                        "username": "cisco"
+                                    }
+                                },
+                                "healthbot-storage": {
+                                    "database": "hb-default:Cisco-virtual:node2",
+                                    "retention-policy": "hb-default:Cisco-virtual:node2"
+                                },
+                                "system-id": "10.213.93.231"
                             },
                             {
                                 "name": "10.213.97.126",
@@ -65,49 +209,79 @@
                                                 "value": "interfaces/interface/state"
                                             },
                                             {
-                                                "key": "prefix",
-                                                "value": "openconfig-interfaces:"
+                                                "key": "rule-id",
+                                                "value": "interface-state"
                                             }
                                         ],
                                         "measurement": "external/cisco-check-interface-state-oc/interface_state/byoi"
                                     },
                                     {
-                                        "name": "external/cisco-check-interface-traffic-oc/interface_stats",
+                                        "name": "external/cisco-check-system-cpu-mdt/cpu_utilization",
+                                        "kvs": [
+                                            {
+                                                "key": "path",
+                                                "value": "system-monitoring/cpu-utilization"
+                                            },
+                                            {
+                                                "key": "rule-id",
+                                                "value": "chassis-cpu-mdt"
+                                            }
+                                        ],
+                                        "measurement": "external/cisco-check-system-cpu-mdt/cpu_utilization/byoi"
+                                    },
+                                    {
+                                        "name": "external/cisco-check-interface-traffic-health-oc/interface_stats_health",
                                         "kvs": [
                                             {
                                                 "key": "path",
                                                 "value": "interfaces/interface/state/counters"
                                             },
                                             {
-                                                "key": "prefix",
-                                                "value": "openconfig-interfaces:"
+                                                "key": "rule-id",
+                                                "value": "interface-traffic"
                                             }
                                         ],
-                                        "measurement": "external/cisco-check-interface-traffic-oc/interface_stats/byoi"
+                                        "measurement": "external/cisco-check-interface-traffic-health-oc/interface_stats_health/byoi"
                                     }
                                 ],
                                 "authentication": {
                                     "password": {
-                                        "password": "$9$UiHkP/9pBRSqmpBIRSys2gJjHP5Q",
+                                        "password": "$9$lPOMWx2gJDHm8XJDiHmPBIRSKMxNd",
                                         "username": "cisco"
                                     }
                                 },
                                 "healthbot-storage": {
-                                    "database": "hb-default:Cisco:node5",
-                                    "retention-policy": "hb-default:Cisco:node5"
+                                    "database": "hb-default:Cisco-virtual:node5",
+                                    "retention-policy": "hb-default:Cisco-virtual:node5"
                                 },
-                                "system-id": "node5"
+                                "system-id": "10.213.94.44"
                             }
                         ],
-                        "device-group": "Cisco",
+                        "device-group": "Cisco-virtual",
                         "kvs": [
                             {
                                 "key": "brokers",
-                                "value": "10.54.165.53:9092"
+                                "value": "10.2.80.136:9094"
+                            },
+                            {
+                                "key": "saslmechanism",
+                                "value": "PLAIN"
+                            },
+                            {
+                                "key": "saslpassword",
+                                "value": "secret1"
+                            },
+                            {
+                                "key": "saslusername",
+                                "value": "user"
                             },
                             {
                                 "key": "topics",
-                                "value": "cisco"
+                                "value": "paragon.insights.byoi.ingest"
+                            },
+                            {
+                                "key": "securityprotocol",
+                                "value": "SASL_PLAINTEXT"
                             }
                         ]
                     }

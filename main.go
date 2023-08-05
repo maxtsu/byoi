@@ -5,17 +5,35 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"os/exec"
 	"os/signal"
+	"regexp"
+	"strings"
 	"syscall"
 	"time"
 
 	"github.com/confluentinc/confluent-kafka-go/kafka"
+	"github.com/gologme/log"
 )
 
 // var configfile = "/etc/byoi/config.json"
 var configfile = "config.json"
+var rulesfile = "rules.json"
 
 func main() {
+	// Initialize Logger
+	//log.EnableLevel("info")
+	//log.EnableLevel("debug")
+	//To enable logging by the following numerical levels
+	// Level 10 = panic, fatal, error, warn, info, debug, & trace
+	// Level 5 = panic, fatal, error, warn, info, & debug
+	// Level 4 = panic, fatal, error, warn, & info
+	// Level 3 = panic, fatal, error, & warn
+	// Level 2 = panic, fatal & error
+	// Level 1 = panic, fatal
+	log.EnableLevelsByNumber(5)
+	log.EnableFormattedPrefix()
+
 	//convert the config.json to a struct
 	byteResult := gnfingest.ReadFile(configfile)
 	var configuration gnfingest.JSONfile
@@ -23,6 +41,19 @@ func main() {
 	if err != nil {
 		fmt.Println("Unmarshall error", err)
 	}
+	// Load rules.json into struct
+	byteResult = gnfingest.ReadFile(rulesfile)
+	var r1 []gnfingest.RulesJSON
+	err = json.Unmarshal(byteResult, &r1)
+	if err != nil {
+		fmt.Println("Unmarshall error", err)
+	}
+	// create map of structs key=rule-id
+	var rules = make(map[string]gnfingest.RulesJSON)
+	for _, r := range r1 {
+		rules[r.RuleID] = r
+	}
+
 	// extract the brokers and topics from the configjson KVS
 	brokertopic := gnfingest.KVS_parsing(configuration.Hbin.Inputs[0].Plugin.Config.KVS, []string{"brokers", "topics"})
 
@@ -31,13 +62,15 @@ func main() {
 
 	//list of devices configuration from configjson
 	bootstrapServers := brokertopic[0]
-	group := "byoi"
+
+	// Generate unique uuid for kafka group-id
+	uuid := Create_uuid()
+	group := string(uuid)
 	topics := []string{brokertopic[1]}
 	devices := configuration.Hbin.Inputs[0].Plugin.Config.Device
-	//list of device key values under sensor for searching messages
-	keys := []string{"prefix", "path"}
+	// config.json list of device key from values under sensor for searching messages
+	keys := []string{"path", "rule-id"}
 	device_keys := gnfingest.DeviceDetails(devices, keys)
-
 	fmt.Printf("Device-Keys %+v\n", device_keys)
 
 	sigchan := make(chan os.Signal, 1)
@@ -93,7 +126,7 @@ func main() {
 				//m := message_root{}
 				for _, d := range device_keys {
 					fmt.Println("Device: ", d.DeviceName)
-					if (d.DeviceName == m.Source) && (d.KVS_prefix == m.Prefix) {
+					if (d.DeviceName == m.Source) && (d.KVS_path == m.Updates[0].Path) {
 						fmt.Printf("name and prefix match ")
 					}
 				}
@@ -135,16 +168,36 @@ func main() {
 	var sample = "interface-state.json"
 	//var sample = "isis-1.json"
 	byteResult = gnfingest.ReadFile(sample)
+	// Unmarshal JSON message into struct
 	var kafkaMessage gnfingest.Message
 	err = json.Unmarshal(byteResult, &kafkaMessage)
 	if err != nil {
-		fmt.Println("Unmarshall error", err)
+		fmt.Println("Unmarshal error", err)
 	}
 
-	// extract source and prefix
-	fmt.Println("source: %s", kafkaMessage.Source)
-	fmt.Println("prefix: %s", kafkaMessage.Prefix)
-	fmt.Println("path: %s", kafkaMessage.Updates[0].Path)
+	// Extract message source IP remove port number
+	messageSource := strings.Split(kafkaMessage.Source, ":")[0]
+	fmt.Println("source: %s", messageSource)
+	// Extract message path remove index values []
+	re := regexp.MustCompile("[[].*?[]]")
+	messagePath := re.ReplaceAllString(kafkaMessage.Updates[0].Path, "")
+	fmt.Println("path: %s", messagePath)
+	// Start matching message to configured rules
+	for _, d := range device_keys {
+		if (d.DeviceName == messageSource) && (d.KVS_path == messagePath) {
+			//extract rule-id
+			rule_id := d.KVS_rule_id
+			fmt.Printf("rule-id: %+v\n", rule_id)
+			// Extract rule from rules.json
+			for _, f1 := range rules[rule_id].Fields {
+				for _, f2 := range f1.Path {
+					fmt.Println("f2: %+v\n", f2)
+				}
+				//path := f1.Path
+				//fields := kafkaMessage.Updates.Values.State
+			}
+		}
+	}
 
 	// parse to extract path & indexes from "Path:" value in message
 	var result []string
@@ -153,19 +206,47 @@ func main() {
 	fmt.Println("path list: %+v\n", result)
 	fmt.Println("map of keys: %+v\n", k1)
 
-	// Test what struct branch is created
-	var ZeroValues gnfingest.Values
-	fmt.Printf("Message: %+v\n", kafkaMessage)
-	fmt.Printf("path: %+v\n", kafkaMessage.Updates[0].Values.State)
+	Test_json_map(kafkaMessage.Updates[0].Values)
 
-	if kafkaMessage.Updates[0].Values.Counters != ZeroValues.Counters {
-		fmt.Println("This is counters message\n")
+	log.Info("this is info log")
+	log.Println("some interesting logging message")
+	log.Debug("debug log")
+	log.Debugf("debug f %+v", k1)
+	log.Error("error log")
+	log.Infoln("info ln")
+}
+
+func Test_json_map(rawdata json.RawMessage) {
+	// Receive raw data section of message put in map
+	var objMap map[string]any
+	err := json.Unmarshal(rawdata, &objMap)
+	if err != nil {
+		fmt.Println("Unmarshal error", err)
 	}
-	if kafkaMessage.Updates[0].Values.Isis.Interfaces.Interface.InterfaceID != ZeroValues.Isis.Interfaces.Interface.InterfaceID {
-		fmt.Println("This is isis message\n")
-		fmt.Printf("Message: %+v\n", kafkaMessage.Updates[0].Values.Isis)
+	fmt.Printf("Mapobject: %+v\n", objMap)
+	// check for key (path)
+	key := "interfaces/interface/state"
+	value, ok := objMap[key]
+	fmt.Printf("key %+v is there %+v\n", value, ok)
+	if ok {
+		// Unmarshall to correct struct
+		var InterfaceState gnfingest.InterfacesInterfaceState
+		err = json.Unmarshal(rawdata, &InterfaceState)
+		if err != nil {
+			fmt.Println("Unmarshal error", err)
+		}
+		fmt.Printf("\nstate struct: %+v\n", InterfaceState)
+
 	}
-	if kafkaMessage.Updates[0].Values.State != ZeroValues.State {
-		fmt.Println("This is interface-state message\n")
+
+}
+
+func Create_uuid() string {
+	newUUID, err := exec.Command("uuidgen").Output()
+	if err != nil {
+		log.Fatal(err)
 	}
+	fmt.Println("Generated UUID:")
+	fmt.Printf("%s", newUUID)
+	return string(newUUID)
 }

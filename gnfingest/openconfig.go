@@ -1,6 +1,8 @@
 package gnfingest
 
-// gnmic Message struct
+import "encoding/json"
+
+// gnmic Message partial struct
 type Message struct {
 	Source           string `json:"source"`
 	SubscriptionName string `json:"subscription-name"`
@@ -8,16 +10,21 @@ type Message struct {
 	Time             string `json:"time"`
 	Prefix           string `json:"prefix"`
 	Updates          []struct {
-		Path   string `json:"Path"`
-		Values Values `json:"values"`
+		Path   string          `json:"Path"`
+		Values json.RawMessage `json:"values"`
 	}
 }
 
 // oc-interfaces Values with different paths struct
 type Values struct {
 	Counters Counters `json:"interfaces/interface/state/counters"`
-	State    State    `json:"interfaces/interface/state"`
-	Isis     Isis     `json:"network-instances/network-instance/protocols/protocol/isis"`
+	State    State    `json:"interfaces/interface/state,omitempty"`
+	Isis     Isis     `json:"network-instances/network-instance/protocols/protocol/isis,omitempty"`
+}
+
+// oc-interfaces Values with interfaces/interface/state
+type InterfacesInterfaceState struct {
+	State State `json:"interfaces/interface/state"`
 }
 
 // oc-interfaces State struct

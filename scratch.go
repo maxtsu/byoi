@@ -25,17 +25,30 @@ func main() {
 	fmt.Println("prefix: %s", kafkaMessage.Prefix)
 	fmt.Println("path: %s", kafkaMessage.Updates[0].Path)
 
-	var source = kafkaMessage.Source
-	var timestamp = kafkaMessage.Timestamp
+	//var source = kafkaMessage.Source
+	//var timestamp = kafkaMessage.Timestamp
 
 	fmt.Printf("\ntimestamp: %+v\n", kafkaMessage.Timestamp)
 
-	unixTime := time.Unix(0, timestamp) //gives unix time stamp in utc
+	//unixTime := time.Unix(0, timestamp) //gives unix time stamp in utc
 
-	fmt.Println("unix time stamp in UTC :--->", unixTimeUTC)
-	fmt.Println("unix time stamp in unitTimeInRFC3339 format :->", unitTimeInRFC3339)
+	//ExampleClient_query(source, unixTime)
 
-	ExampleClient_query(source, unixTime)
+	// Load rules.json into struct
+	var rulesfile = "rules.json"
+	byteResult = gnfingest.ReadFile(rulesfile)
+	var r []gnfingest.RulesJSON
+	err = json.Unmarshal(byteResult, &r)
+	if err != nil {
+		fmt.Println("Unmarshall error", err)
+	}
+	//fmt.Printf("Rules:  %+v\n", rules)
+	// create map of structs key=rule-id
+	var rules = make(map[string]gnfingest.RulesJSON)
+	for _, r := range r {
+		rules[r.RuleID] = r
+	}
+	fmt.Printf("Rules:  %+v\n", rules)
 }
 
 // start a new client

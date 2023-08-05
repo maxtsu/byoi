@@ -1,7 +1,7 @@
 {
   "source": "10.213.94.44:57400",
   "subscription-name": "default-1683377340",
-  "timestamp": 1683377545465000000,
+  "timestamp": 1685011751666000000,
   "time": "2023-05-06T12:52:25.465Z",
   "prefix": "openconfig-interfaces:",
   "updates": [
