@@ -80,7 +80,7 @@ func ExampleClient_query(source string, timestamp time.Time) {
 	}
 	bp.AddPoint(pt)
 
-	// Write the batch
+	// Write the batch test
 	c.Write(bp)
 
 }
