@@ -105,11 +105,17 @@ spec:
         envFrom:
         - configMapRef:
               name: {{ env['GROUP_TYPE'] }}-{{ env['GROUP_NAME_VALID'] }}{{ sg_name }}-{{ env['CUSTOM_PLUGIN_NAME'] }}
-        volumeMounts:
+        volumeMounts:      - name: healthbot
+        hostPath:
+          type: DirectoryOrCreate
+          path: /var/local/healthbot/input/hb-default
         - name: default
           mountPath: /etc/byoi
         - name: data-model
           mountPath: /etc/ml
+        - name: healthbot
+          mountPath: /etc/healthbot
+          readOnly: true
       volumes:
       - name: default
         hostPath:
@@ -119,5 +125,9 @@ spec:
         hostPath:
           type: DirectoryOrCreate
           path: {{ env['JFIT_ETC_PATH'] }}/data/models/{{ env['GROUP_NAME'] }}
+      - name: healthbot
+        hostPath:
+          type: DirectoryOrCreate
+          path: /var/local/healthbot/input/hb-default
       imagePullSecrets:
       - name: registry-secret
