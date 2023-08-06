@@ -57,13 +57,14 @@ func main() {
 	// Level 1 = panic, fatal
 	log.EnableLevelsByNumber(level)
 	log.EnableFormattedPrefix()
+	log.Info("Logging configured as ", strings.ToUpper(loggingLevel), ". Set at level ", level)
 
 	// Load rules.json into struct
 	byteResult = gnfingest.ReadFile(rulesfile)
 	var r1 []gnfingest.RulesJSON
 	err = json.Unmarshal(byteResult, &r1)
 	if err != nil {
-		fmt.Println("Unmarshall error", err)
+		log.Error("Unmarshall error ", err)
 	}
 	// create map of structs key=rule-id
 	var rules = make(map[string]gnfingest.RulesJSON)
@@ -71,36 +72,32 @@ func main() {
 		rules[r.RuleID] = r
 	}
 
-	//### Call function to extract kafka brokers and topics
-	//   brokers, topics, user, password, saslmech, secprotocol = brokerTopic(configFile)
-	// extract the brokers and topics from the configjson KVS
-	brokertopic := gnfingest.KVS_parsing(configuration.Hbin.Inputs[0].Plugin.Config.KVS, []string{"brokers", "topics", "user", "password", "saslmech", "secprotocol"})
-
-	fmt.Println("this is the broker: " + brokertopic[0])
-	fmt.Println("this is the topics: " + brokertopic[1])
-	fmt.Println("this is the user: " + brokertopic[2])
-	fmt.Println("this is the password: " + brokertopic[3])
-	fmt.Println("this is the saslmech: " + brokertopic[4])
-	fmt.Println("this is the secprotocol: " + brokertopic[5])
+	// extract the brokers topics and configuration from the configjson KVS
+	kafkaCfg := gnfingest.KVS_parsing(configuration.Hbin.Inputs[0].Plugin.Config.KVS, []string{"brokers", "topics", "saslusername", "saslpassword", "saslmechanism", "securityprotocol"})
 
 	//list of devices configuration from configjson
-	bootstrapServers := brokertopic[0]
+	bootstrapServers := kafkaCfg[0]
 
 	// Generate unique uuid for kafka group-id
-	uuid := Create_uuid()
-	group := string(uuid)
-	topics := []string{brokertopic[1]}
+	group := string(Create_uuid())
+	log.Debugf("Created Kafka group ID (UUID) %s", group)
+
 	devices := configuration.Hbin.Inputs[0].Plugin.Config.Device
 	// config.json list of device key from values under sensor for searching messages
 	keys := []string{"path", "rule-id"}
 	device_keys := gnfingest.DeviceDetails(devices, keys)
-	fmt.Printf("Device-Keys %+v\n", device_keys)
+	//fmt.Printf("Device-Keys %+v\n", device_keys)
 
 	sigchan := make(chan os.Signal, 1)
 	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
 
+	// Create kafka consumer configuration fro kafkaCfg
 	consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
 		"bootstrap.servers":  bootstrapServers,
+		"sasl.mechanisms":    kafkaCfg[4],
+		"security.protocol":  kafkaCfg[5],
+		"sasl.username":      kafkaCfg[2],
+		"sasl.password":      kafkaCfg[3],
 		"group.id":           group,
 		"session.timeout.ms": 6000,
 		// Start reading from the first message of each assigned
@@ -111,10 +108,12 @@ func main() {
 		"enable.auto.offset.store": false,
 	})
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to create consumer: %s\n", err)
+		log.Error("Failed to create consumer: ", err)
 		os.Exit(1)
 	}
-	fmt.Printf("Created Consumer %v\n", consumer)
+	log.Infof("Created Consumer %v\n", consumer)
+
+	topics := []string{kafkaCfg[1]}
 	err = consumer.SubscribeTopics(topics, nil)
 
 	//run := true
@@ -124,7 +123,7 @@ func main() {
 		time.Sleep(2 * time.Second)
 		select {
 		case sig := <-sigchan:
-			fmt.Printf("Caught signal %v: terminating\n", sig)
+			log.Infof("Caught signal %v: terminating\n", sig)
 			run = false
 		default:
 			// Poll the consumer for messages or events
@@ -269,7 +268,5 @@ func Create_uuid() string {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("Generated UUID:")
-	fmt.Printf("%s", newUUID)
 	return string(newUUID)
 }
