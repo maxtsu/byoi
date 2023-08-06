@@ -21,16 +21,7 @@ var configfile = "config.json"
 var rulesfile = "rules.json"
 
 func main() {
-	// Initialize Logger
-	//log.EnableLevel("info")
-	//log.EnableLevel("debug")
-	//To enable logging by the following numerical levels
-	// Level 10 = panic, fatal, error, warn, info, debug, & trace
-	// Level 5 = panic, fatal, error, warn, info, & debug
-	// Level 4 = panic, fatal, error, warn, & info
-	// Level 3 = panic, fatal, error, & warn
-	// Level 2 = panic, fatal & error
-	// Level 1 = panic, fatal
+
 	log.EnableLevelsByNumber(5)
 	log.EnableFormattedPrefix()
 
@@ -41,7 +32,30 @@ func main() {
 	if err != nil {
 		fmt.Println("Unmarshall error", err)
 	}
-	fmt.Println("Logging level ", configuration.Logging.Level)
+
+	// Set logging level From config.json
+	loggingLevel := configuration.Logging.Level
+	switch loggingLevel {
+	case "debug":
+		level = 5
+	case "info":
+		level = 4
+	case "warn":
+		level = 3
+	case "error":
+		level = 2
+	default:
+        level = 4
+	// Initialize Logger
+	// Level 10 = panic, fatal, error, warn, info, debug, & trace
+	// Level 5 = panic, fatal, error, warn, info, & debug
+	// Level 4 = panic, fatal, error, warn, & info
+	// Level 3 = panic, fatal, error, & warn
+	// Level 2 = panic, fatal & error
+	// Level 1 = panic, fatal
+	log.EnableLevelsByNumber(level)
+	log.EnableFormattedPrefix()
+	
 	// Load rules.json into struct
 	byteResult = gnfingest.ReadFile(rulesfile)
 	var r1 []gnfingest.RulesJSON
@@ -55,11 +69,18 @@ func main() {
 		rules[r.RuleID] = r
 	}
 
+
+	//### Call function to extract kafka brokers and topics
+	//   brokers, topics, user, password, saslmech, secprotocol = brokerTopic(configFile)
 	// extract the brokers and topics from the configjson KVS
-	brokertopic := gnfingest.KVS_parsing(configuration.Hbin.Inputs[0].Plugin.Config.KVS, []string{"brokers", "topics"})
+	brokertopic := gnfingest.KVS_parsing(configuration.Hbin.Inputs[0].Plugin.Config.KVS, []string{"brokers","topics","user","password","saslmech","secprotocol"})
 
 	fmt.Println("this is the broker: " + brokertopic[0])
 	fmt.Println("this is the topics: " + brokertopic[1])
+	fmt.Println("this is the user: " + brokertopic[2])
+	fmt.Println("this is the password: " + brokertopic[3])
+	fmt.Println("this is the saslmech: " + brokertopic[4])
+	fmt.Println("this is the secprotocol: " + brokertopic[5])
 
 	//list of devices configuration from configjson
 	bootstrapServers := brokertopic[0]
