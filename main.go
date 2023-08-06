@@ -41,6 +41,7 @@ func main() {
 	if err != nil {
 		fmt.Println("Unmarshall error", err)
 	}
+	fmt.Println("Logging level ", configuration.Logging.Level)
 	// Load rules.json into struct
 	byteResult = gnfingest.ReadFile(rulesfile)
 	var r1 []gnfingest.RulesJSON
