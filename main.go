@@ -81,7 +81,7 @@ func main() {
 	// Generate unique kafka group-id
 	rand.Seed(time.Now().UnixNano())
 	group := randStr(10)
-	log.Info("Random Kafka group ID created: ", group)
+	log.Info("Random Kafka group ID created ", group)
 
 	devices := configuration.Hbin.Inputs[0].Plugin.Config.Device
 	// config.json list of device key from values under sensor for searching messages
