@@ -237,29 +237,6 @@ func hometest() {
 		fmt.Println("Unmarshal error", err)
 	}
 
-	// Extract message source IP remove port number
-	messageSource := strings.Split(kafkaMessage.Source, ":")[0]
-	fmt.Println("source: %s", messageSource)
-	// Extract message path remove index values []
-	re := regexp.MustCompile("[[].*?[]]")
-	messagePath := re.ReplaceAllString(kafkaMessage.Updates[0].Path, "")
-	fmt.Println("path: %s", messagePath)
-	// Start matching message to configured rules
-	for _, d := range device_keys {
-		if (d.DeviceName == messageSource) && (d.KVS_path == messagePath) {
-			//extract rule-id
-			rule_id := d.KVS_rule_id
-			fmt.Printf("rule-id: %+v\n", rule_id)
-			// Extract rule from rules.json
-			for _, f1 := range rules[rule_id].Fields {
-				for _, f2 := range f1.Path {
-					fmt.Println("f2: %+v\n", f2)
-				}
-				//path := f1.Path
-				//fields := kafkaMessage.Updates.Values.State
-			}
-		}
-	}
 	// parse to extract path & indexes from "Path:" value in message
 	var result []string
 	var k1 = make(map[string][]gnfingest.KVS)
@@ -268,4 +245,33 @@ func hometest() {
 	fmt.Println("map of keys: %+v\n", k1)
 
 	Test_json_map(kafkaMessage.Updates[0].Values)
+}
+
+func sourceExtraction(kafkaMessage gnfingest.Message) {
+	// Extract message source IP remove port number
+	messageSource := strings.Split(kafkaMessage.Source, ":")[0]
+	fmt.Println("source: %s", messageSource)
+	// Extract message path remove index values []
+	re := regexp.MustCompile("[[].*?[]]")
+	messagePath := re.ReplaceAllString(kafkaMessage.Updates[0].Path, "")
+	fmt.Println("path: %s", messagePath)
+}
+
+func messageMatching(messageSource string, messagePath string, device_keys []gnfingest.Device_Keys) {
+	// Start matching message to configured rules
+	for _, d := range device_keys {
+		if (d.DeviceName == messageSource) && (d.KVS_path == messagePath) {
+			//extract rule-id
+			rule_id := d.KVS_rule_id
+			fmt.Printf("rule-id: %+v\n", rule_id)
+			// Extract rule from rules.json
+			//for _, f1 := range rules[rule_id].Fields {
+			//	for _, f2 := range f1.Path {
+			//		fmt.Println("f2: %+v\n", f2)
+			//	}
+				//path := f1.Path
+				//fields := kafkaMessage.Updates.Values.State
+			}
+		}
+	}
 }
