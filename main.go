@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
-	"os/exec"
 	"os/signal"
 	"regexp"
 	"strings"
@@ -17,9 +16,9 @@ import (
 	"github.com/gologme/log"
 )
 
-var configfile = "/etc/byoi/config.json"
+//var configfile = "/etc/byoi/config.json"
 
-// var configfile = "config.json"
+var configfile = "config.json"
 var rulesfile = "rules.json"
 
 func main() {
@@ -80,21 +79,9 @@ func main() {
 	//list of devices configuration from configjson
 	bootstrapServers := kafkaCfg[0]
 
-	// Generate unique uuid for kafka group-id
-	//group := string(Create_uuid())
-	//log.Debugf("Created Kafka group ID (UUID) %s", group)
-
+	// Generate unique kafka group-id
 	rand.Seed(time.Now().UnixNano())
-	// String
-	charset := "abcdefghijklmnopqrstuvwxyz"
-	// Getting random character
-	c := charset[rand.Intn(len(charset))]
-
-	// Display the character
-	fmt.Println("random string")
-	fmt.Println(string(c))
-	group := c
-	/////
+	group := randStr(10)
 
 	devices := configuration.Hbin.Inputs[0].Plugin.Config.Device
 	// config.json list of device key from values under sensor for searching messages
@@ -217,10 +204,14 @@ func Test_json_map(rawdata json.RawMessage) {
 
 }
 
-func Create_uuid() string {
-	newUUID, err := exec.Command("uuidgen").Output()
-	if err != nil {
-		log.Fatal(err)
+func randStr(n int) string {
+	// n is the length of random string we want to generate
+	// define the given charset, char only
+	var charset = []byte("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+	b := make([]byte, n)
+	for i := range b {
+		// randomly select 1 character from given charset
+		b[i] = charset[rand.Intn(len(charset))]
 	}
-	return string(newUUID)
+	return string(b)
 }
