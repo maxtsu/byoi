@@ -4,11 +4,12 @@ RUN apk add alpine-sdk
 
 WORKDIR /
 
-COPY gnfingest .
-COPY main.go .
-COPY vendor .
-COPY go.mod .
-COPY go.sum .
+COPY . .
+#COPY gnfingest .
+#COPY main.go .
+#COPY vendor .
+#COPY go.mod .
+#COPY go.sum .
 
 RUN go mod download
 RUN GOOS=linux GOARCH=amd64 go build -o app -tags musl
