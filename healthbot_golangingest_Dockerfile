@@ -2,7 +2,9 @@ FROM golang:alpine as builder
 
 RUN apk add alpine-sdk
 
-WORKDIR / 
+WORKDIR /
+
+COPY gnfingest .
 COPY main.go .
 COPY vendor .
 COPY go.mod .
