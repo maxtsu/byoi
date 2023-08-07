@@ -81,12 +81,13 @@ func main() {
 	// Generate unique kafka group-id
 	rand.Seed(time.Now().UnixNano())
 	group := randStr(10)
+	log.Info("Random Kafka group ID created: ", group)
 
 	devices := configuration.Hbin.Inputs[0].Plugin.Config.Device
 	// config.json list of device key from values under sensor for searching messages
 	keys := []string{"path", "rule-id"}
 	device_keys := gnfingest.DeviceDetails(devices, keys)
-	//fmt.Printf("Device-Keys %+v\n", device_keys)
+	fmt.Printf("Device-Keys %+v\n", device_keys)
 
 	sigchan := make(chan os.Signal, 1)
 	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
@@ -123,7 +124,7 @@ func main() {
 		time.Sleep(2 * time.Second)
 		select {
 		case sig := <-sigchan:
-			log.Infof("Caught signal %v: terminating\n", sig)
+			log.Warnf("Caught signal %v: terminating\n", sig)
 			run = false
 		default:
 			// Poll the consumer for messages or events
@@ -172,6 +173,7 @@ func main() {
 				// Errors should generally be considered
 				// informational, the client will try to
 				// automatically recover.
+				log.Errorf("We are here!!!!!!!!!!")
 				// In this example we choose to terminate
 				// the application if all brokers are down.
 				fmt.Fprintf(os.Stderr, "%% Error: %v: %v\n", e.Code(), e)
