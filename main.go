@@ -269,9 +269,8 @@ func messageMatching(messageSource string, messagePath string, device_keys []gnf
 			//	for _, f2 := range f1.Path {
 			//		fmt.Println("f2: %+v\n", f2)
 			//	}
-				//path := f1.Path
-				//fields := kafkaMessage.Updates.Values.State
-			}
+			//path := f1.Path
+			//fields := kafkaMessage.Updates.Values.State
 		}
 	}
 }
