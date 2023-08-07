@@ -4,12 +4,11 @@ RUN apk add alpine-sdk
 
 WORKDIR /
 
-COPY . .
-#COPY gnfingest .
-#COPY main.go .
-#COPY vendor .
-#COPY go.mod .
-#COPY go.sum .
+COPY gnfingest/ .
+COPY main.go .
+COPY vendor .
+COPY go.mod .
+COPY go.sum .
 
 RUN go mod download
 RUN GOOS=linux GOARCH=amd64 go build -o app -tags musl
@@ -17,3 +16,5 @@ RUN GOOS=linux GOARCH=amd64 go build -o app -tags musl
 FROM alpine:latest as runner
 WORKDIR /root/
 COPY --from=builder app .
+COPY rules.json .
+COPY jfit_reconfigure.sh .
