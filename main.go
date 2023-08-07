@@ -21,10 +21,6 @@ var configfile = "/etc/byoi/config.json"
 var rulesfile = "rules.json"
 
 func main() {
-
-	log.EnableLevelsByNumber(5)
-	log.EnableFormattedPrefix()
-
 	//convert the config.json to a struct
 	byteResult := gnfingest.ReadFile(configfile)
 	var configuration gnfingest.JSONfile
