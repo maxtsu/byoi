@@ -132,8 +132,7 @@ func main() {
 			switch e := event.(type) {
 			case *kafka.Message:
 				// Process the message received.
-				fmt.Printf("%% Message on %s:\n%s\n",
-					e.TopicPartition, string(e.Value))
+				fmt.Printf("%% Message on %s:\n%s\n", e.TopicPartition, string(e.Value))
 				kafkaMessage := string(e.Value)
 
 				//sp := get_source_prefix(kafkaMessage)
@@ -172,69 +171,19 @@ func main() {
 				// In this example we choose to terminate
 				// the application if all brokers are down.
 				log.Errorf("%% Error: %v: %v\n", e.Code(), e)
-				fmt.Fprintf(os.Stderr, "%% Error: %v: %v\n", e.Code(), e)
 				if e.Code() == kafka.ErrAllBrokersDown {
 					run = false
 					log.Errorf("Kafka error. All brokers down ")
 				}
 			default:
-				fmt.Printf("Ignored %v\n", e)
+				log.Errorf("Ignored %v\n", e)
 			}
 		}
 	}
 
-	// Processing sample message
-	//var sample = "Sample4.json"
-	//var sample = "Sample20.json"
-	var sample = "interface-state.json"
-	//var sample = "isis-1.json"
-	byteResult = gnfingest.ReadFile(sample)
-	// Unmarshal JSON message into struct
-	var kafkaMessage gnfingest.Message
-	err = json.Unmarshal(byteResult, &kafkaMessage)
-	if err != nil {
-		fmt.Println("Unmarshal error", err)
-	}
+	// Run sample files in home lab
+	//hometest()
 
-	// Extract message source IP remove port number
-	messageSource := strings.Split(kafkaMessage.Source, ":")[0]
-	fmt.Println("source: %s", messageSource)
-	// Extract message path remove index values []
-	re := regexp.MustCompile("[[].*?[]]")
-	messagePath := re.ReplaceAllString(kafkaMessage.Updates[0].Path, "")
-	fmt.Println("path: %s", messagePath)
-	// Start matching message to configured rules
-	for _, d := range device_keys {
-		if (d.DeviceName == messageSource) && (d.KVS_path == messagePath) {
-			//extract rule-id
-			rule_id := d.KVS_rule_id
-			fmt.Printf("rule-id: %+v\n", rule_id)
-			// Extract rule from rules.json
-			for _, f1 := range rules[rule_id].Fields {
-				for _, f2 := range f1.Path {
-					fmt.Println("f2: %+v\n", f2)
-				}
-				//path := f1.Path
-				//fields := kafkaMessage.Updates.Values.State
-			}
-		}
-	}
-
-	// parse to extract path & indexes from "Path:" value in message
-	var result []string
-	var k1 = make(map[string][]gnfingest.KVS)
-	result, k1 = gnfingest.PathExtract(kafkaMessage.Updates[0].Path)
-	fmt.Println("path list: %+v\n", result)
-	fmt.Println("map of keys: %+v\n", k1)
-
-	Test_json_map(kafkaMessage.Updates[0].Values)
-
-	log.Info("this is info log")
-	log.Println("some interesting logging message")
-	log.Debug("debug log")
-	log.Debugf("debug f %+v", k1)
-	log.Error("error log")
-	log.Infoln("info ln")
 }
 
 func Test_json_map(rawdata json.RawMessage) {
@@ -272,4 +221,51 @@ func randStr(n int) string {
 		b[i] = charset[rand.Intn(len(charset))]
 	}
 	return string(b)
+}
+
+func hometest() {
+	// Processing sample message
+	//var sample = "Sample4.json"
+	//var sample = "Sample20.json"
+	var sample = "interface-state.json"
+	//var sample = "isis-1.json"
+	byteResult := gnfingest.ReadFile(sample)
+	// Unmarshal JSON message into struct
+	var kafkaMessage gnfingest.Message
+	err := json.Unmarshal(byteResult, &kafkaMessage)
+	if err != nil {
+		fmt.Println("Unmarshal error", err)
+	}
+
+	// Extract message source IP remove port number
+	messageSource := strings.Split(kafkaMessage.Source, ":")[0]
+	fmt.Println("source: %s", messageSource)
+	// Extract message path remove index values []
+	re := regexp.MustCompile("[[].*?[]]")
+	messagePath := re.ReplaceAllString(kafkaMessage.Updates[0].Path, "")
+	fmt.Println("path: %s", messagePath)
+	// Start matching message to configured rules
+	for _, d := range device_keys {
+		if (d.DeviceName == messageSource) && (d.KVS_path == messagePath) {
+			//extract rule-id
+			rule_id := d.KVS_rule_id
+			fmt.Printf("rule-id: %+v\n", rule_id)
+			// Extract rule from rules.json
+			for _, f1 := range rules[rule_id].Fields {
+				for _, f2 := range f1.Path {
+					fmt.Println("f2: %+v\n", f2)
+				}
+				//path := f1.Path
+				//fields := kafkaMessage.Updates.Values.State
+			}
+		}
+	}
+	// parse to extract path & indexes from "Path:" value in message
+	var result []string
+	var k1 = make(map[string][]gnfingest.KVS)
+	result, k1 = gnfingest.PathExtract(kafkaMessage.Updates[0].Path)
+	fmt.Println("path list: %+v\n", result)
+	fmt.Println("map of keys: %+v\n", k1)
+
+	Test_json_map(kafkaMessage.Updates[0].Values)
 }
