@@ -169,12 +169,13 @@ func main() {
 				// Errors should generally be considered
 				// informational, the client will try to
 				// automatically recover.
-				log.Errorf("We are here!!!!!!!!!!")
 				// In this example we choose to terminate
 				// the application if all brokers are down.
+				log.Errorf("%% Error: %v: %v\n", e.Code(), e)
 				fmt.Fprintf(os.Stderr, "%% Error: %v: %v\n", e.Code(), e)
 				if e.Code() == kafka.ErrAllBrokersDown {
 					run = false
+					log.Errorf("Kafka error. All brokers down ")
 				}
 			default:
 				fmt.Printf("Ignored %v\n", e)
