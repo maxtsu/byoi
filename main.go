@@ -108,10 +108,10 @@ func main() {
 		"enable.auto.offset.store": false,
 	})
 	if err != nil {
-		log.Error("Failed to create consumer: ", err)
+		log.Error("Failed to create consumer. ", err)
 		os.Exit(1)
 	}
-	log.Infof("Created Consumer %v\n", consumer)
+	log.Info("Created Consumer. ", consumer)
 
 	topics := []string{kafkaCfg[1]}
 	err = consumer.SubscribeTopics(topics, nil)
