@@ -16,8 +16,9 @@ import (
 	"github.com/gologme/log"
 )
 
-// var configfile = "/etc/byoi/config.json"
-var configfile = "config.json"
+var configfile = "/etc/byoi/config.json"
+
+// var configfile = "config.json"
 var rulesfile = "rules.json"
 
 func main() {
@@ -116,8 +117,8 @@ func main() {
 	topics := []string{kafkaCfg[1]}
 	err = consumer.SubscribeTopics(topics, nil)
 
-	//run := true
-	run := false
+	run := true
+	//run := false
 	for run {
 		fmt.Printf("waiting for kafka message\n")
 		time.Sleep(2 * time.Second)
