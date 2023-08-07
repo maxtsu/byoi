@@ -16,9 +16,8 @@ import (
 	"github.com/gologme/log"
 )
 
-//var configfile = "/etc/byoi/config.json"
-
-var configfile = "config.json"
+// var configfile = "config.json"
+var configfile = "/etc/byoi/config.json"
 var rulesfile = "rules.json"
 
 func main() {
@@ -121,8 +120,68 @@ func main() {
 	//run := false
 	for run {
 		fmt.Printf("waiting for kafka message\n")
-		time.Sleep(5 * time.Second)
+		time.Sleep(2 * time.Second)
+		select {
+		case sig := <-sigchan:
+			log.Infof("Caught signal %v: terminating\n", sig)
+			run = false
+		default:
+			// Poll the consumer for messages or events
+			m := gnfingest.Message{}
+			event := consumer.Poll(400)
+			if event == nil {
+				continue
+			}
+			switch e := event.(type) {
+			case *kafka.Message:
+				// Process the message received.
+				fmt.Printf("%% Message on %s:\n%s\n",
+					e.TopicPartition, string(e.Value))
+				kafkaMessage := string(e.Value)
 
+				//sp := get_source_prefix(kafkaMessage)
+
+				json.Unmarshal([]byte(kafkaMessage), &m)
+				fmt.Printf("message struct: %+v\n", m)
+
+				//Start matching message to configured rules
+				//m := message_root{}
+				for _, d := range device_keys {
+					fmt.Println("Device: ", d.DeviceName)
+					if (d.DeviceName == m.Source) && (d.KVS_path == m.Updates[0].Path) {
+						fmt.Printf("name and prefix match ")
+					}
+				}
+
+				if e.Headers != nil {
+					fmt.Printf("%% Headers: %v\n", e.Headers)
+				}
+				// We can store the offsets of the messages manually or let
+				// the library do it automatically based on the setting
+				// enable.auto.offset.store. Once an offset is stored, the
+				// library takes care of periodically committing it to the broker
+				// if enable.auto.commit isn't set to false (the default is true).
+				// By storing the offsets manually after completely processing
+				// each message, we can ensure atleast once processing.
+				_, err := consumer.StoreMessage(e)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "%% Error storing offset after message %s:\n",
+						e.TopicPartition)
+				}
+			case kafka.Error:
+				// Errors should generally be considered
+				// informational, the client will try to
+				// automatically recover.
+				// In this example we choose to terminate
+				// the application if all brokers are down.
+				fmt.Fprintf(os.Stderr, "%% Error: %v: %v\n", e.Code(), e)
+				if e.Code() == kafka.ErrAllBrokersDown {
+					run = false
+				}
+			default:
+				fmt.Printf("Ignored %v\n", e)
+			}
+		}
 	}
 
 	// Processing sample message
