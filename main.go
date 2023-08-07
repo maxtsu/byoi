@@ -4,6 +4,7 @@ import (
 	"byoi/gnfingest"
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -80,8 +81,20 @@ func main() {
 	bootstrapServers := kafkaCfg[0]
 
 	// Generate unique uuid for kafka group-id
-	group := string(Create_uuid())
-	log.Debugf("Created Kafka group ID (UUID) %s", group)
+	//group := string(Create_uuid())
+	//log.Debugf("Created Kafka group ID (UUID) %s", group)
+
+	rand.Seed(time.Now().UnixNano())
+	// String
+	charset := "abcdefghijklmnopqrstuvwxyz"
+	// Getting random character
+	c := charset[rand.Intn(len(charset))]
+
+	// Display the character
+	fmt.Println("random string")
+	fmt.Println(string(c))
+	group := c
+	/////
 
 	devices := configuration.Hbin.Inputs[0].Plugin.Config.Device
 	// config.json list of device key from values under sensor for searching messages
