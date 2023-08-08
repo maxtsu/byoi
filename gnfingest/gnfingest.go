@@ -8,7 +8,7 @@ import (
 )
 
 // The Top struct for the config.json
-type JSONfile struct {
+type Configjson struct {
 	Hbin    Hbin `json:"hbin"`
 	Logging struct {
 		Level   string `json:"level"`
@@ -36,20 +36,14 @@ type Outputs struct {
 
 // The Inputs struct for the config.json
 type Inputs struct {
-	Plugin Plugin `json:"plugin"`
-}
-
-// The Plugin struct for the config.json
-type Plugin struct {
-	Name   string `json:"name"`
-	Config Config `json:"config"`
-}
-
-// The Config struct for the config.json
-type Config struct {
-	Device []Device `json:"device"`
-	Devgrp string   `json:"device-group"`
-	KVS    []KVS    `json:"kvs"`
+	Plugin struct {
+		Name   string `json:"name"`
+		Config struct {
+			Device      []Device `json:"device"`
+			Devicegroup string   `json:"device-group"`
+			KVS         []KVS    `json:"kvs"`
+		} `json:"config"`
+	} `json:"plugin"`
 }
 
 // Device type

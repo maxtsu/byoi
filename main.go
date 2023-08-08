@@ -16,21 +16,22 @@ import (
 	"github.com/gologme/log"
 )
 
-// var configfile = "config.json"
-var configfile = "/etc/byoi/config.json"
+var configfile = "config.json"
+
+// var configfile = "/etc/byoi/config.json"
 var rulesfile = "rules.json"
 
 func main() {
 	//convert the config.json to a struct
 	byteResult := gnfingest.ReadFile(configfile)
-	var configuration gnfingest.JSONfile
-	err := json.Unmarshal(byteResult, &configuration)
+	var configjson gnfingest.Configjson
+	err := json.Unmarshal(byteResult, &configjson)
 	if err != nil {
 		fmt.Println("Unmarshall error", err)
 	}
 
 	// Set logging level From config.json
-	loggingLevel := configuration.Logging.Level
+	loggingLevel := configjson.Logging.Level
 	var level int = 4
 	switch loggingLevel {
 	case "debug":
@@ -69,7 +70,7 @@ func main() {
 	}
 
 	// extract the brokers topics and configuration from the configjson KVS
-	kafkaCfg := gnfingest.KVS_parsing(configuration.Hbin.Inputs[0].Plugin.Config.KVS, []string{"brokers", "topics", "saslusername", "saslpassword", "saslmechanism", "securityprotocol"})
+	kafkaCfg := gnfingest.KVS_parsing(configjson.Hbin.Inputs[0].Plugin.Config.KVS, []string{"brokers", "topics", "saslusername", "saslpassword", "saslmechanism", "securityprotocol"})
 
 	//list of devices configuration from configjson
 	bootstrapServers := kafkaCfg[0]
@@ -79,8 +80,8 @@ func main() {
 	group := randStr(10)
 	log.Info("Random Kafka group ID created ", group)
 
-	devices := configuration.Hbin.Inputs[0].Plugin.Config.Device
 	// config.json list of device key from values under sensor for searching messages
+	devices := configjson.Hbin.Inputs[0].Plugin.Config.Device
 	keys := []string{"path", "rule-id"}
 	device_keys := gnfingest.DeviceDetails(devices, keys)
 	fmt.Printf("Device-Keys %+v\n", device_keys)
@@ -124,7 +125,7 @@ func main() {
 			run = false
 		default:
 			// Poll the consumer for messages or events
-			m := gnfingest.Message{}
+			message := gnfingest.Message{}
 			event := consumer.Poll(400)
 			if event == nil {
 				continue
@@ -132,22 +133,13 @@ func main() {
 			switch e := event.(type) {
 			case *kafka.Message:
 				// Process the message received.
-				fmt.Printf("%% Message on %s:\n%s\n", e.TopicPartition, string(e.Value))
+				log.Infof("%% Message on %s: %s\n", e.TopicPartition, string(e.Value))
 				kafkaMessage := string(e.Value)
+				json.Unmarshal([]byte(kafkaMessage), &message)
+				log.Debugf("message struct: %+v\n", message)
 
-				//sp := get_source_prefix(kafkaMessage)
-
-				json.Unmarshal([]byte(kafkaMessage), &m)
-				fmt.Printf("message struct: %+v\n", m)
-
-				//Start matching message to configured rules
-				//m := message_root{}
-				for _, d := range device_keys {
-					fmt.Println("Device: ", d.DeviceName)
-					if (d.DeviceName == m.Source) && (d.KVS_path == m.Updates[0].Path) {
-						fmt.Printf("name and prefix match ")
-					}
-				}
+				// Start processing message
+				ProcessKafkaMessage(&message, device_keys)
 
 				if e.Headers != nil {
 					fmt.Printf("%% Headers: %v\n", e.Headers)
@@ -183,6 +175,26 @@ func main() {
 
 	// Run sample files in home lab
 	//hometest()
+
+}
+
+// Process the raw kafka message pointer to message (we do not change it)
+func ProcessKafkaMessage(message *gnfingest.Message, devices []gnfingest.Device_Keys) {
+	// Extract message source IP remove port number
+	messageSource := strings.Split(message.Source, ":")[0]
+	fmt.Println("source: %s", messageSource)
+	// Extract message path remove index values []
+	re := regexp.MustCompile("[[].*?[]]")
+	messagePath := re.ReplaceAllString(message.Updates[0].Path, "")
+	fmt.Println("path: %s", messagePath)
+
+	//Start matching message to configured rules in config.json
+	for _, d := range devices {
+		fmt.Println("Device: ", d.DeviceName)
+		if (d.DeviceName == message.Source) && (d.KVS_path == message.Updates[0].Path) {
+			fmt.Printf("name and prefix match ")
+		}
+	}
 
 }
 
@@ -245,16 +257,6 @@ func hometest() {
 	fmt.Println("map of keys: %+v\n", k1)
 
 	Test_json_map(kafkaMessage.Updates[0].Values)
-}
-
-func sourceExtraction(kafkaMessage gnfingest.Message) {
-	// Extract message source IP remove port number
-	messageSource := strings.Split(kafkaMessage.Source, ":")[0]
-	fmt.Println("source: %s", messageSource)
-	// Extract message path remove index values []
-	re := regexp.MustCompile("[[].*?[]]")
-	messagePath := re.ReplaceAllString(kafkaMessage.Updates[0].Path, "")
-	fmt.Println("path: %s", messagePath)
 }
 
 func messageMatching(messageSource string, messagePath string, device_keys []gnfingest.Device_Keys) {

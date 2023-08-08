@@ -261,7 +261,7 @@
                         "kvs": [
                             {
                                 "key": "brokers",
-                                "value": "10.2.80.136:9094"
+                                "value": "10.54.169.17:9093"
                             },
                             {
                                 "key": "saslmechanism",
@@ -277,7 +277,7 @@
                             },
                             {
                                 "key": "topics",
-                                "value": "paragon.insights.byoi.ingest"
+                                "value": "gnf.network.telemetry"
                             },
                             {
                                 "key": "securityprotocol",
