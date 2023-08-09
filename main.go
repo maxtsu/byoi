@@ -7,7 +7,6 @@ import (
 	"math/rand"
 	"os"
 	"os/signal"
-	"regexp"
 	"strings"
 	"syscall"
 	"time"
@@ -180,13 +179,10 @@ func main() {
 
 // Process the raw kafka message pointer to message (we do not change it)
 func ProcessKafkaMessage(message *gnfingest.Message, devices []gnfingest.Device_Keys) {
-	// Extract message source IP remove port number
-	messageSource := strings.Split(message.Source, ":")[0]
-	fmt.Println("source: %s", messageSource)
-	// Extract message path remove index values []
-	re := regexp.MustCompile("[[].*?[]]")
-	messagePath := re.ReplaceAllString(message.Updates[0].Path, "")
-	fmt.Println("path: %s", messagePath)
+	//Extract source IP and Path from message
+	messageSource := message.MessageSource()
+	messagePath := message.MessagePath()
+	log.Debugln("Source %s Path %s", messageSource, messagePath)
 
 	//Start matching message to configured rules in config.json
 	for _, d := range devices {

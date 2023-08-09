@@ -1,6 +1,10 @@
 package gnfingest
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"regexp"
+	"strings"
+)
 
 // gnmic Message partial struct
 type Message struct {
@@ -13,6 +17,19 @@ type Message struct {
 		Path   string          `json:"Path"`
 		Values json.RawMessage `json:"values"`
 	}
+}
+
+// Method to extract source IP & path
+func (m *Message) MessageSource() string {
+	// Extract message source IP remove port number
+	return (strings.Split(m.Source, ":")[0])
+}
+
+// Method to extract message path
+func (m *Message) MessagePath() string {
+	// Extract message path remove index values []
+	re := regexp.MustCompile("[[].*?[]]")
+	return (re.ReplaceAllString(m.Updates[0].Path, ""))
 }
 
 // oc-interfaces Values with different paths struct
