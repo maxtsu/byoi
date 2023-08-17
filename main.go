@@ -114,7 +114,7 @@ func main() {
 
 	run := true
 	//run := false
-	for run == true {
+	for run {
 		fmt.Printf("waiting for kafka message\n")
 		time.Sleep(2 * time.Second)
 		select {
