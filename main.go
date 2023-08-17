@@ -20,12 +20,9 @@ var configfile = "config.json"
 var rulesfile = "rules.json"
 
 func main() {
-	//#getting Env details for TAND and group-id from ENV
-	//tand_host = os.environ.get('TAND_HOST') + ".healthbot"
-	//tand_port = os.environ.get('TAND_PORT')
-	//group_id = os.environ.get('CHANNEL') + "-ingest2"
-	tand_host := (os.Getenv("TAND_HOST") + ".healthbot")
-	tand_port := os.Getenv("TAND_PORT")
+	// Getting Env details for TAND and group-id from ENV
+	//tand_host := (os.Getenv("TAND_HOST") + ".healthbot")
+	//tand_port := os.Getenv("TAND_PORT")
 	group := (os.Getenv("CHANNEL'") + "-golang1")
 
 	//convert the config.json to a struct
