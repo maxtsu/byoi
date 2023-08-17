@@ -72,7 +72,8 @@ func main() {
 	}
 
 	// extract the brokers topics and configuration from the configjson KVS
-	kafkaCfg := gnfingest.KVS_parsing(configjson.Hbin.Inputs[0].Plugin.Config.KVS, []string{"brokers", "topics", "saslusername", "saslpassword", "saslmechanism", "securityprotocol"})
+	kafkaCfg := gnfingest.KVS_parsing(configjson.Hbin.Inputs[0].Plugin.Config.KVS, []string{"brokers", "topics",
+		"saslusername", "saslpassword", "saslmechanism", "securityprotocol"})
 
 	//list of devices configuration from configjson
 	bootstrapServers := kafkaCfg[0]
@@ -113,7 +114,7 @@ func main() {
 
 	run := true
 	//run := false
-	for run {
+	for run == true {
 		fmt.Printf("waiting for kafka message\n")
 		time.Sleep(2 * time.Second)
 		select {
@@ -130,6 +131,7 @@ func main() {
 			switch e := event.(type) {
 			case *kafka.Message:
 				// Process the message received.
+				fmt.Printf("Got a kafka message\n")
 				log.Infof("%% Message on %s: %s\n", e.TopicPartition, string(e.Value))
 				kafkaMessage := string(e.Value)
 				json.Unmarshal([]byte(kafkaMessage), &message)
