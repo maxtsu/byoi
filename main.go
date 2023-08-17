@@ -4,7 +4,6 @@ import (
 	"byoi/gnfingest"
 	"encoding/json"
 	"fmt"
-	"math/rand"
 	"os"
 	"os/signal"
 	"strings"
@@ -21,6 +20,14 @@ var configfile = "config.json"
 var rulesfile = "rules.json"
 
 func main() {
+	//#getting Env details for TAND and group-id from ENV
+	//tand_host = os.environ.get('TAND_HOST') + ".healthbot"
+	//tand_port = os.environ.get('TAND_PORT')
+	//group_id = os.environ.get('CHANNEL') + "-ingest2"
+	tand_host := (os.Getenv("TAND_HOST") + ".healthbot")
+	tand_port := os.Getenv("TAND_PORT")
+	group := (os.Getenv("CHANNEL'") + "-golang1")
+
 	//convert the config.json to a struct
 	byteResult := gnfingest.ReadFile(configfile)
 	var configjson gnfingest.Configjson
@@ -74,11 +81,6 @@ func main() {
 	//list of devices configuration from configjson
 	bootstrapServers := kafkaCfg[0]
 
-	// Generate unique kafka group-id
-	rand.Seed(time.Now().UnixNano())
-	group := randStr(10)
-	log.Info("Random Kafka group ID created ", group)
-
 	// config.json list of device key from values under sensor for searching messages
 	devices := configjson.Hbin.Inputs[0].Plugin.Config.Device
 	keys := []string{"path", "rule-id"}
@@ -88,7 +90,7 @@ func main() {
 	sigchan := make(chan os.Signal, 1)
 	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
 
-	// Create kafka consumer configuration fro kafkaCfg
+	// Create kafka consumer configuration for kafkaCfg
 	consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
 		"bootstrap.servers":  bootstrapServers,
 		"sasl.mechanisms":    kafkaCfg[4],
@@ -217,18 +219,6 @@ func Test_json_map(rawdata json.RawMessage) {
 
 	}
 
-}
-
-func randStr(n int) string {
-	// n is the length of random string we want to generate
-	// define the given charset, char only
-	var charset = []byte("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
-	b := make([]byte, n)
-	for i := range b {
-		// randomly select 1 character from given charset
-		b[i] = charset[rand.Intn(len(charset))]
-	}
-	return string(b)
 }
 
 func hometest() {
