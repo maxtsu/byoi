@@ -14,8 +14,7 @@ import (
 	"github.com/gologme/log"
 )
 
-//var configfile = "config.json"
-
+// var configfile = "config.json"
 var configfile = "/etc/byoi/config.json"
 var rulesfile = "rules.json"
 
