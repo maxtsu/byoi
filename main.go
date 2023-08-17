@@ -131,7 +131,7 @@ func main() {
 			switch e := event.(type) {
 			case *kafka.Message:
 				// Process the message received.
-				fmt.Printf("Got a kafka message\n")
+				//fmt.Printf("Got a kafka message\n")
 				log.Infof("%% Message on %s: %s\n", e.TopicPartition, string(e.Value))
 				kafkaMessage := string(e.Value)
 				json.Unmarshal([]byte(kafkaMessage), &message)
