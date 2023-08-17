@@ -6,7 +6,7 @@ WORKDIR /
 
 COPY gnfingest/. gnfingest/.
 COPY main.go .
-COPY vendor .
+#COPY vendor .
 COPY go.mod .
 COPY go.sum .
 
