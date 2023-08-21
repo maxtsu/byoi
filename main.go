@@ -179,7 +179,7 @@ func ProcessKafkaMessage(message *gnfingest.Message, devices []gnfingest.Device_
 	//Extract source IP and Path from message
 	emptyerror := message.MessageEmpty()
 	if emptyerror != nil {
-		log.Infoln("Error with message %s", emptyerror)
+		log.Infof("Error with message %s\n", emptyerror)
 	}
 	messageSource := message.MessageSource()
 	messagePath := message.MessagePath()
