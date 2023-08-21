@@ -97,7 +97,6 @@ spec:
         - configMapRef:
               name: {{ env['GROUP_TYPE'] }}-{{ env['GROUP_NAME_VALID'] }}{{ sg_name }}-{{ env['CUSTOM_PLUGIN_NAME'] }}
         volumeMounts:
-        hostPath:
         - name: default
           mountPath: /etc/byoi
         - name: data-model
