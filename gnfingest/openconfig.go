@@ -22,6 +22,8 @@ type Message struct {
 
 // Method to check message has contents
 func (m *Message) MessageEmpty() error {
+	fmt.Printf("this is the empty %+v\n", &Message{})
+	fmt.Printf("this is the m %+v\n", m)
 	if (m == &Message{}) {
 		fmt.Println("It is an empty structure.")
 		return fmt.Errorf("Message is not in JSON format")
