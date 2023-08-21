@@ -139,7 +139,7 @@ func main() {
 				log.Debugf("message struct: %+v\n", message)
 
 				// Start processing message
-				ProcessKafkaMessage(&message, device_keys)
+				//ProcessKafkaMessage(&message, device_keys)
 
 				if e.Headers != nil {
 					fmt.Printf("%% Headers: %v\n", e.Headers)

@@ -78,16 +78,6 @@ spec:
         envFrom:
         - configMapRef:
             name: {{ env['GROUP_TYPE'] }}-{{ env['GROUP_NAME_VALID'] }}{{ sg_name }}-{{ env['CUSTOM_PLUGIN_NAME'] }}
-      hostAliases:
-      - ip: "10.2.80.136"
-        hostnames:
-        - "gnf-kafka-0.gnf-kafka-headless.gnf-kafka.svc.cluster.local"
-      - ip: "10.2.80.136"
-        hostnames:
-        - "gnf-kafka-1.gnf-kafka-headless.gnf-kafka.svc.cluster.local"
-      - ip: "10.2.80.136"
-        hostnames:
-        - "gnf-kafka-2.gnf-kafka-headless.gnf-kafka.svc.cluster.local"
       containers:
       - name: {{ env['CUSTOM_PLUGIN_NAME'] }}
         image: {{ env['REGISTRY'] }}/{{ env['HEALTHBOT_GOLANGINGEST_IMAGE'] }}:{{ env['HEALTHBOT_GOLANGINGEST_TAG'] }}
