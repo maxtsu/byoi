@@ -25,10 +25,10 @@ func (m *Message) MessageEmpty() error {
 	fmt.Printf("this is the message %+v\n", m)
 	if m.Source == "" {
 		fmt.Println("Empty Source")
-		return fmt.Errorf("No Source field in message")
+		return fmt.Errorf("no Source field in message")
 	} else if m.Prefix == "" {
 		fmt.Println("Empty Prefix")
-		return fmt.Errorf("No Prefix field in message")
+		return fmt.Errorf("no Prefix field in message")
 	} else {
 		fmt.Println("It is not an empty structure.")
 		return nil
