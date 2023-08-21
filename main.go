@@ -121,7 +121,7 @@ func main() {
 		select {
 		case sig := <-sigchan:
 			log.Warnf("Caught signal %v: terminating\n", sig)
-			run = false
+			//run = false
 		default:
 			// Poll the consumer for messages or events
 			message := gnfingest.Message{}
@@ -134,9 +134,9 @@ func main() {
 				// Process the message received.
 				//fmt.Printf("Got a kafka message\n")
 				log.Infof("%% Message on %s: %s\n", e.TopicPartition, string(e.Value))
-				kafkaMessage := string(e.Value)
-				json.Unmarshal([]byte(kafkaMessage), &message)
-				log.Debugf("message struct: %+v\n", message)
+				//kafkaMessage := string(e.Value)
+				//json.Unmarshal([]byte(kafkaMessage), &message)
+				//log.Debugf("message struct: %+v\n", message)
 
 				// Start processing message
 				//ProcessKafkaMessage(&message, device_keys)
@@ -157,8 +157,7 @@ func main() {
 						e.TopicPartition)
 				}
 			case kafka.Error:
-				// Errors should generally be considered
-				// informational, the client will try to
+				// Errors should generally be considered informational, the client will try to
 				// automatically recover.
 				log.Errorf("%% Error: %v: %v\n", e.Code(), e)
 				if e.Code() == kafka.ErrAllBrokersDown {
