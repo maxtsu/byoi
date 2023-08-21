@@ -22,7 +22,7 @@ func main() {
 	// Getting Env details for TAND and group-id from ENV
 	//tand_host := (os.Getenv("TAND_HOST") + ".healthbot")
 	//tand_port := os.Getenv("TAND_PORT")
-	group := (os.Getenv("CHANNEL'") + "-golang1")
+	//group := (os.Getenv("CHANNEL'") + "-golang1")
 
 	//convert the config.json to a struct
 	byteResult := gnfingest.ReadFile(configfile)
