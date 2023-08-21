@@ -177,6 +177,10 @@ func main() {
 // Process the raw kafka message pointer to message (we do not change it)
 func ProcessKafkaMessage(message *gnfingest.Message, devices []gnfingest.Device_Keys) {
 	//Extract source IP and Path from message
+	emptyerror := message.MessageEmpty()
+	if emptyerror != nil {
+		log.Infoln("Error with message %s", emptyerror)
+	}
 	messageSource := message.MessageSource()
 	messagePath := message.MessagePath()
 	log.Debugln("Source %s Path %s", messageSource, messagePath)

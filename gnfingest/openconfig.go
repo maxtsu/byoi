@@ -2,6 +2,7 @@ package gnfingest
 
 import (
 	"encoding/json"
+	"fmt"
 	"regexp"
 	"strings"
 )
@@ -16,6 +17,18 @@ type Message struct {
 	Updates          []struct {
 		Path   string          `json:"Path"`
 		Values json.RawMessage `json:"values"`
+	}
+}
+
+// Method to check message has contents
+func (m *Message) MessageEmpty() error {
+	var empty Message
+	if m == &empty {
+		fmt.Println("It is an empty structure.")
+		return fmt.Errorf("Message is not in JSON format")
+	} else {
+		fmt.Println("It is not an empty structure.")
+		return nil
 	}
 }
 
