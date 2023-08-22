@@ -24,12 +24,14 @@ type Message struct {
 func (m *Message) MessageEmpty() error {
 	fmt.Printf("this is the message %+v\n", m)
 	//if m.Source == "" {
-	//	return fmt.Errorf("no Source field in message")
+	//	return fmt.Errorf("no Source field in JSON message")
 	//} else if m.Prefix == "" {
-	//	return fmt.Errorf("no Prefix field in message")
+	//	return fmt.Errorf("no Prefix field in JSON message")
 	//} else if m.Updates[0].Path == "" {
-	if m.Updates[0].Path == "" {
-		return fmt.Errorf("no Path in message")
+	if len(m.Updates) <= 0 {
+		return fmt.Errorf("no updates in JSON message")
+	} else if m.Updates[0].Path == "" {
+		return fmt.Errorf("no path in JSON message")
 	} else {
 		fmt.Println("It is not an empty structure.")
 		return nil
