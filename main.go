@@ -178,6 +178,7 @@ func main() {
 func ProcessKafkaMessage(message *gnfingest.Message, devices []gnfingest.Device_Keys) {
 	//Extract source IP and Path from message
 	msgVerify := message.MessageEmpty()
+	fmt.Println("Test if we are here ")
 	if msgVerify != nil {
 		fmt.Println("message not verified ")
 		log.Infof("Error JSON message %s\n", msgVerify)
