@@ -23,12 +23,13 @@ type Message struct {
 // Method to check message has contents
 func (m *Message) MessageEmpty() error {
 	fmt.Printf("this is the message %+v\n", m)
-	if m.Source == "" {
-		fmt.Println("Empty Source")
-		return fmt.Errorf("no Source field in message")
-	} else if m.Prefix == "" {
-		fmt.Println("Empty Prefix")
-		return fmt.Errorf("no Prefix field in message")
+	//if m.Source == "" {
+	//	return fmt.Errorf("no Source field in message")
+	//} else if m.Prefix == "" {
+	//	return fmt.Errorf("no Prefix field in message")
+	//} else if m.Updates[0].Path == "" {
+	if m.Updates[0].Path == "" {
+		return fmt.Errorf("no Path in message")
 	} else {
 		fmt.Println("It is not an empty structure.")
 		return nil
