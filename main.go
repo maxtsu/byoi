@@ -178,23 +178,22 @@ func main() {
 func ProcessKafkaMessage(message *gnfingest.Message, devices []gnfingest.Device_Keys) {
 	//Extract source IP and Path from message
 	msgVerify := message.VerifyMessage()
-	fmt.Println("Test if we are here ")
-	if msgVerify != nil {
+	if msgVerify != nil { // Not valid openconfig message
 		fmt.Println("message not verified ")
 		log.Infof("Error JSON message %s\n", msgVerify)
-	}
-	messageSource := message.MessageSource()
-	messagePath := message.MessagePath()
-	log.Debugln("Source %s Path %s", messageSource, messagePath)
+	} else { // Valid openconfig message
+		messageSource := message.MessageSource()
+		messagePath := message.MessagePath()
+		log.Debugln("Source %s Path %s", messageSource, messagePath)
 
-	//Start matching message to configured rules in config.json
-	for _, d := range devices {
-		fmt.Println("Device: ", d.DeviceName)
-		if (d.DeviceName == message.Source) && (d.KVS_path == message.Updates[0].Path) {
-			fmt.Printf("name and prefix match ")
+		//Start matching message to configured rules in config.json
+		for _, d := range devices {
+			fmt.Println("Device: ", d.DeviceName)
+			if (d.DeviceName == message.Source) && (d.KVS_path == message.Updates[0].Path) {
+				fmt.Printf("name and prefix match ")
+			}
 		}
 	}
-
 }
 
 func Test_json_map(rawdata json.RawMessage) {
