@@ -133,13 +133,11 @@ func main() {
 			case *kafka.Message:
 				// Process the message received.
 				//fmt.Printf("Got a kafka message\n")
-				log.Infof("%% Message on %s: %s\n", e.TopicPartition, string(e.Value)[100:])
+				log.Debugf("%% Message on %s: %s\n", e.TopicPartition, string(e.Value)[100:])
 				kafkaMessage := string(e.Value)
 				json.Unmarshal([]byte(kafkaMessage), &message)
-				log.Debugf("message struct: %+v\n", message)
-
 				// Start processing message
-				ProcessKafkaMessage(&message, device_keys)
+				ProcessKafkaMessage(&message, &device_keys)
 
 				if e.Headers != nil {
 					fmt.Printf("%% Headers: %v\n", e.Headers)
@@ -175,7 +173,7 @@ func main() {
 }
 
 // Process the raw kafka message pointer to message (we do not change it)
-func ProcessKafkaMessage(message *gnfingest.Message, devices []gnfingest.Device_Keys) {
+func ProcessKafkaMessage(message *gnfingest.Message, devices *[]gnfingest.Device_Keys) {
 	//Extract source IP and Path from message
 	msgVerify := message.VerifyMessage()
 	if msgVerify != nil { // Not valid openconfig message
