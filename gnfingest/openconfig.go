@@ -20,20 +20,18 @@ type Message struct {
 	}
 }
 
-// Method to check message has contents
-func (m *Message) MessageEmpty() error {
+// Method to verify openconfig JSON message
+func (m *Message) VerifyMessage() error {
 	fmt.Printf("this is the message %+v\n", m)
-	//if m.Source == "" {
-	//	return fmt.Errorf("no Source field in JSON message")
-	//} else if m.Prefix == "" {
-	//	return fmt.Errorf("no Prefix field in JSON message")
-	//} else if m.Updates[0].Path == "" {
-	if len(m.Updates) <= 0 {
-		return fmt.Errorf("no updates in JSON message")
+	if m.Source == "" {
+		return fmt.Errorf("no Source field in message")
+	} else if m.Prefix == "" {
+		return fmt.Errorf("no Prefix field in message")
+	} else if len(m.Updates) <= 0 {
+		return fmt.Errorf("no updates array in message")
 	} else if m.Updates[0].Path == "" {
-		return fmt.Errorf("no path in JSON message")
-	} else {
-		fmt.Println("It is not an empty structure.")
+		return fmt.Errorf("no path field in message")
+	} else { // This openconfig message is OK
 		return nil
 	}
 }
