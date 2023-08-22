@@ -133,7 +133,7 @@ func main() {
 			case *kafka.Message:
 				// Process the message received.
 				//fmt.Printf("Got a kafka message\n")
-				log.Infof("%% Message on %s: %s\n", e.TopicPartition, string(e.Value))
+				log.Infof("%% Message on %s: %s\n", e.TopicPartition, string(e.Value)[100:])
 				kafkaMessage := string(e.Value)
 				json.Unmarshal([]byte(kafkaMessage), &message)
 				log.Debugf("message struct: %+v\n", message)
@@ -184,13 +184,13 @@ func ProcessKafkaMessage(message *gnfingest.Message, devices []gnfingest.Device_
 	} else { // Valid openconfig message
 		messageSource := message.MessageSource()
 		messagePath := message.MessagePath()
-		log.Debugln("Source %s Path %s", messageSource, messagePath)
+		log.Debugf("Source %s Path %s\n", messageSource, messagePath)
 
 		//Start matching message to configured rules in config.json
 		for _, d := range devices {
 			fmt.Println("Device: ", d.DeviceName)
 			if (d.DeviceName == message.Source) && (d.KVS_path == message.Updates[0].Path) {
-				fmt.Printf("name and prefix match ")
+				fmt.Printf("name and prefix match %s\n", d.DeviceName)
 			}
 		}
 	}
