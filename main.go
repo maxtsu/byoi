@@ -225,13 +225,15 @@ func MessageTestJsonMap(rawdata json.RawMessage, rule *gnfingest.RulesJSON) {
 		var InterfaceState gnfingest.InterfacesInterfaceState
 		err = json.Unmarshal(rawdata, &InterfaceState)
 		if err != nil {
-			fmt.Println("Unmarshal error", err)
+			log.Errorln("Unmarshal error", err)
 		}
 	}
-	// Unmarshall rawdata into struct
+	// Unmarshall rawdata into struct omitempty will create only path struct
 	var Values gnfingest.Values
 	err = json.Unmarshal(rawdata, &Values)
 	log.Debugf("Struct Values %+v\n", Values)
+	v1 := Values.State.OperStatus
+	fmt.Printf("values Operstate %s", v1)
 }
 
 func Test_json_map(rawdata json.RawMessage) {
