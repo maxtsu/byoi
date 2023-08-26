@@ -64,7 +64,7 @@ func (m *Message) MessageProcessRule(rule *RulesJSON) json.RawMessage {
 type Values struct {
 	Counters Counters `json:"interfaces/interface/state/counters,omitempty"`
 	State    State    `json:"interfaces/interface/state,omitempty"`
-	Isis     Isis     `json:"network-instances/network-instance/protocols/protocol/isis,omitempty"`
+	Isis     Isis     `json:"network-instances/network-instance/protocols/protocol/isis"`
 }
 
 // oc-interfaces Values with interfaces/interface/state
