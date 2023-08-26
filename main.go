@@ -181,6 +181,7 @@ func ProcessKafkaMessage(message *gnfingest.Message, devices_keys []gnfingest.De
 		//Extract source IP and Path from message
 		messageSource := message.MessageSource()
 		messagePath := message.MessagePath()
+		messagePrefix := message.Prefix
 		log.Debugf("Source %s Path %s\n", messageSource, messagePath)
 
 		//Start matching message to configured rules in config.json
@@ -189,7 +190,7 @@ func ProcessKafkaMessage(message *gnfingest.Message, devices_keys []gnfingest.De
 			log.Debugf("device to match %+v\n", d)
 			fmt.Println("Device: ", d.DeviceName)
 			// Match Source Prefix Path
-			if (d.DeviceName == message.Source) && (d.KVS_prefix == message.Prefix) && (d.KVS_path == messagePath) {
+			if (d.DeviceName == messageSource) && (d.KVS_prefix == messagePrefix) && (d.KVS_path == messagePath) {
 				log.Infof("name path and prefix match %s\n", d.DeviceName)
 				//Rule-id for processing
 				rule_id := d.KVS_rule_id
