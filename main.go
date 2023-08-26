@@ -137,7 +137,7 @@ func main() {
 				//fmt.Printf("Got a kafka message\n")
 				log.Debugf("%% Message on %s: %s\n", e.TopicPartition, string(e.Value)[100:])
 				kafkaMessage := string(e.Value)
-				fmt.Printf("\nkafkaMessage: %s\n", kafkaMessage)
+				fmt.Printf("\nkafkaMessage: %s\n", kafkaMessage) //MEssage in single string
 				json.Unmarshal([]byte(kafkaMessage), &message)
 				// Start processing message
 				ProcessKafkaMessage(&message, device_keys)

@@ -22,7 +22,7 @@ type Message struct {
 	}
 }
 
-// Method to verify openconfig JSON message
+// Message Method to verify openconfig JSON message
 func (m *Message) MessageVerify() error {
 	fmt.Printf("this is the message %+v\n", m)
 	if m.Source == "" {
@@ -38,27 +38,56 @@ func (m *Message) MessageVerify() error {
 	}
 }
 
-// Method to extract source IP & path
+// Message Method to extract source IP & path
 func (m *Message) MessageSource() string {
 	// Extract message source IP remove port number
 	return (strings.Split(m.Source, ":")[0])
 }
 
-// Method to extract message path
+// Message Method to extract message path
 func (m *Message) MessagePath() string {
 	// Extract message path remove index values []
 	re := regexp.MustCompile("[[].*?[]]")
 	return (re.ReplaceAllString(m.Updates[0].Path, ""))
 }
 
-// Process rule when message matched
+// Message Method to process rule when message matched
 func (m *Message) MessageProcessRule(rule *RulesJSON) {
 	log.Debugf("rule %+v\n", rule)
+	//unpack the rawmessage section
+	log.Debugf("rule %s\n", m.Updates[0].Values)
+	rawdata := m.Updates[0].Values
+	messageTestJsonMap(rawdata)
+}
+
+func messageTestJsonMap(rawdata json.RawMessage) {
+	// Receive raw data section of message put in map
+	var objMap map[string]any
+	err := json.Unmarshal(rawdata, &objMap)
+	if err != nil {
+		fmt.Println("Unmarshal error", err)
+	}
+	fmt.Printf("Mapobject: %+v\n", objMap)
+	// check for key (path) in the map
+	key := "interfaces/interface/state"
+	value, ok := objMap[key]
+	fmt.Printf("key %+v is there %+v\n", value, ok)
+	if ok {
+		// Unmarshall to correct struct
+		var InterfaceState gnfingest.InterfacesInterfaceState
+		err = json.Unmarshal(rawdata, &InterfaceState)
+		if err != nil {
+			fmt.Println("Unmarshal error", err)
+		}
+		fmt.Printf("\nstate struct: %+v\n", InterfaceState)
+
+	}
+
 }
 
 // oc-interfaces Values with different paths struct
 type Values struct {
-	Counters Counters `json:"interfaces/interface/state/counters"`
+	Counters Counters `json:"interfaces/interface/state/counters,omitempty"`
 	State    State    `json:"interfaces/interface/state,omitempty"`
 	Isis     Isis     `json:"network-instances/network-instance/protocols/protocol/isis,omitempty"`
 }
