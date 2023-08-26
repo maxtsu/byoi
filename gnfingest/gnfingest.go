@@ -73,17 +73,39 @@ type KVS struct {
 	Value string `json:"value"`
 }
 
-// struct defining device details ::-
+// Function to return list/slice of device details from config.json
+func (c *Configjson) DeviceDetails(keys []string) []Device_Keys {
+	// create slice of devices
+	device_keys := []Device_Keys{}
+	for _, d := range c.Hbin.Inputs[0].Plugin.Config.Device {
+		//extract list/slice of structs for sensors
+		//d.MapKVS() //Create map for KVS items
+		// Iterate over array of sensors
+		for _, s := range d.Sensor {
+			var dev Device_Keys
+			dev.DeviceName = d.SystemID
+			dev.Database = d.HealthbotStorage.Database
+			dev.Measurement = s.Measurement
+			kvs_pairs := KVS_parsing(s.KVS, keys)
+			// Parameters from config.json {path}
+			dev.KVS_path = kvs_pairs[0]
+			dev.KVS_rule_id = kvs_pairs[1]
+			dev.KVS_prefix = kvs_pairs[2]
+			device_keys = append(device_keys, dev)
+		}
+	}
+	return device_keys
+}
+
+// struct defining sensor/rule for each device
 //
-//		-device name
-//		-kvs path
-//	 -kvs rule-id
-//		-measurement
-//		-database
+// -device name -kvs path -kvs rule-id
+// -kvs prefix -measurement -database
 type Device_Keys struct {
 	DeviceName  string
 	KVS_path    string
 	KVS_rule_id string
+	KVS_prefix  string
 	Measurement string
 	Database    string
 }
@@ -100,29 +122,6 @@ func ReadFile(fileName string) []byte {
 	return byteResult
 }
 
-// Function to return list/slice of device details from config.json
-func DeviceDetails(devices []Device, keys []string) []Device_Keys {
-	// create slice of devices
-	device_keys := []Device_Keys{}
-	for _, d := range devices {
-		//extract list/slice of structs for sensors
-		sensors := d.Sensor
-		for _, s := range sensors {
-			// Create Device_Keys struct and append it to the slice.
-			var dev Device_Keys
-			dev.DeviceName = d.SystemID
-			dev.Database = d.HealthbotStorage.Database
-			dev.Measurement = s.Measurement
-			//extract the KVS pairs from sensor container
-			values := KVS_parsing(s.KVS, keys)
-			dev.KVS_path = values[0]
-			dev.KVS_rule_id = values[1]
-			device_keys = append(device_keys, dev)
-		}
-	}
-	return device_keys
-}
-
 // Function to extract KVS pairs by key names passed into function
 func KVS_parsing(keys []KVS, keyString []string) []string {
 	// Build a config map:
@@ -136,8 +135,6 @@ func KVS_parsing(keys []KVS, keyString []string) []string {
 	for _, key := range keyString {
 		if v, ok := confMap[key]; ok {
 			value := v
-			//fmt.Println("keystring ", key)
-			//fmt.Println("value ", value)
 			valueString = append(valueString, value)
 		} else {
 			fmt.Println(key, "not in config.json")

@@ -19,6 +19,9 @@ var configfile = "config.json"
 // var configfile = "/etc/byoi/config.json"
 var rulesfile = "rules.json"
 
+// Global variables 'rules'
+var rules = make(map[string]gnfingest.RulesJSON)
+
 func main() {
 	// Getting Env details for TAND and group-id from ENV
 	//tand_host := (os.Getenv("TAND_HOST") + ".healthbot")
@@ -67,7 +70,7 @@ func main() {
 		log.Error("Unmarshall error ", err)
 	}
 	// create map of structs key=rule-id
-	var rules = make(map[string]gnfingest.RulesJSON)
+	//var rules = make(map[string]gnfingest.RulesJSON)
 	for _, r := range r1 {
 		rules[r.RuleID] = r
 	}
@@ -80,9 +83,8 @@ func main() {
 	bootstrapServers := kafkaCfg[0]
 
 	// config.json list of device key from values under sensor for searching messages
-	devices := configjson.Hbin.Inputs[0].Plugin.Config.Device
-	keys := []string{"path", "rule-id"}
-	device_keys := gnfingest.DeviceDetails(devices, keys)
+	keys := []string{"path", "rule-id", "prefix"} //list of keys/parameters to extract from the KVS section
+	device_keys := configjson.DeviceDetails(keys)
 	fmt.Printf("Device-Keys %+v\n", device_keys)
 
 	sigchan := make(chan os.Signal, 1)
@@ -137,7 +139,7 @@ func main() {
 				kafkaMessage := string(e.Value)
 				json.Unmarshal([]byte(kafkaMessage), &message)
 				// Start processing message
-				ProcessKafkaMessage(&message, &device_keys)
+				ProcessKafkaMessage(&message, device_keys)
 
 				if e.Headers != nil {
 					fmt.Printf("%% Headers: %v\n", e.Headers)
@@ -166,20 +168,17 @@ func main() {
 			}
 		}
 	}
-
 	// Run sample files in home lab
 	//hometest()
-
 }
 
 // Process the raw kafka message pointer to message (we do not change it)
-func ProcessKafkaMessage(message *gnfingest.Message, devices *[]gnfingest.Device_Keys) {
-	//Extract source IP and Path from message
+func ProcessKafkaMessage(message *gnfingest.Message, devices []gnfingest.Device_Keys) {
 	msgVerify := message.VerifyMessage()
 	if msgVerify != nil { // Not valid openconfig message
-		fmt.Println("message not verified ")
 		log.Infof("Error JSON message %s\n", msgVerify)
 	} else { // Valid openconfig message
+		//Extract source IP and Path from message
 		messageSource := message.MessageSource()
 		messagePath := message.MessagePath()
 		log.Debugf("Source %s Path %s\n", messageSource, messagePath)
@@ -187,11 +186,22 @@ func ProcessKafkaMessage(message *gnfingest.Message, devices *[]gnfingest.Device
 		//Start matching message to configured rules in config.json
 		for _, d := range devices {
 			fmt.Println("Device: ", d.DeviceName)
-			if (d.DeviceName == message.Source) && (d.KVS_path == message.Updates[0].Path) {
-				fmt.Printf("name and prefix match %s\n", d.DeviceName)
+			// Match Source Prefix Path
+			if (d.DeviceName == message.Source) && (d.KVS_prefix == message.Prefix) && (d.KVS_path == messagePath) {
+				log.Infof("name path and prefix match %s\n", d.DeviceName)
+				//Rule-id for processing
+				rule_id := d.KVS_rule_id
+				log.Infof("Rule-ID match %s\n", rule_id)
 			}
 		}
 	}
+}
+
+// Process rule when message matched
+func ProcessRule(rule_id string) {
+	// extract the rule in rules.json
+	rule := rules[rule_id]
+	log.Debugf("rule %s\n", rule)
 }
 
 func Test_json_map(rawdata json.RawMessage) {
@@ -241,22 +251,4 @@ func hometest() {
 	fmt.Println("map of keys: %+v\n", k1)
 
 	Test_json_map(kafkaMessage.Updates[0].Values)
-}
-
-func messageMatching(messageSource string, messagePath string, device_keys []gnfingest.Device_Keys) {
-	// Start matching message to configured rules
-	for _, d := range device_keys {
-		if (d.DeviceName == messageSource) && (d.KVS_path == messagePath) {
-			//extract rule-id
-			rule_id := d.KVS_rule_id
-			fmt.Printf("rule-id: %+v\n", rule_id)
-			// Extract rule from rules.json
-			//for _, f1 := range rules[rule_id].Fields {
-			//	for _, f2 := range f1.Path {
-			//		fmt.Println("f2: %+v\n", f2)
-			//	}
-			//path := f1.Path
-			//fields := kafkaMessage.Updates.Values.State
-		}
-	}
 }
