@@ -74,7 +74,7 @@ func messageTestJsonMap(rawdata json.RawMessage) {
 	fmt.Printf("key %+v is there %+v\n", value, ok)
 	if ok {
 		// Unmarshall to correct struct
-		var InterfaceState gnfingest.InterfacesInterfaceState
+		var InterfaceState InterfacesInterfaceState
 		err = json.Unmarshal(rawdata, &InterfaceState)
 		if err != nil {
 			fmt.Println("Unmarshal error", err)
