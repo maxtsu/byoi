@@ -35,7 +35,6 @@ func main() {
 	if err != nil {
 		fmt.Println("Unmarshall error", err)
 	}
-	fmt.Printf("config.json %+v\n", configjson)
 
 	// Set logging level From config.json
 	loggingLevel := configjson.Logging.Level

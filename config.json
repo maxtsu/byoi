@@ -11,7 +11,7 @@
                     "config": {
                         "device": [
                             {
-                                "name": "10.213.97.125",
+                                "name": "node2",
                                 "sensor": [
                                     {
                                         "name": "external/cisco-check-interface-state-oc/interface_state",
@@ -60,10 +60,10 @@
                                     "database": "hb-default:Cisco-virtual:node2",
                                     "retention-policy": "hb-default:Cisco-virtual:node2"
                                 },
-                                "system-id": "10.213.93.231"
+                                "system-id": "10.213.97.125"
                             },
                             {
-                                "name": "10.213.97.126",
+                                "name": "node5",
                                 "sensor": [
                                     {
                                         "name": "external/cisco-check-interface-state-oc/interface_state",
@@ -112,7 +112,7 @@
                                     "database": "hb-default:Cisco-virtual:node5",
                                     "retention-policy": "hb-default:Cisco-virtual:node5"
                                 },
-                                "system-id": "10.213.94.44"
+                                "system-id": "10.213.97.126"
                             }
                         ],
                         "device-group": "Cisco-virtual",
