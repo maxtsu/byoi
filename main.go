@@ -228,7 +228,7 @@ func MessageTestJsonMap(rawdata json.RawMessage, rule *gnfingest.RulesJSON) {
 			fmt.Println("Unmarshal error", err)
 		}
 	}
-	// Unmarshall
+	// Unmarshall rawdata into struct
 	var Values gnfingest.Values
 	err = json.Unmarshal(rawdata, &Values)
 	log.Debugf("Struct Values %+v\n", Values)
@@ -254,9 +254,7 @@ func Test_json_map(rawdata json.RawMessage) {
 			fmt.Println("Unmarshal error", err)
 		}
 		fmt.Printf("\nstate struct: %+v\n", InterfaceState)
-
 	}
-
 }
 
 func hometest() {
