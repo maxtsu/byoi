@@ -23,7 +23,7 @@ type Message struct {
 }
 
 // Method to verify openconfig JSON message
-func (m *Message) VerifyMessage() error {
+func (m *Message) MessageVerify() error {
 	fmt.Printf("this is the message %+v\n", m)
 	if m.Source == "" {
 		return fmt.Errorf("no Source field in message")

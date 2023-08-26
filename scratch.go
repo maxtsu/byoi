@@ -48,7 +48,10 @@ func main() {
 	for _, r := range r {
 		rules[r.RuleID] = r
 	}
-	fmt.Printf("Rules:  %+v\n", rules)
+	//fmt.Printf("Rules:  %+v\n", rules)
+	str := fmt.Sprintf("%#v", rules)
+	fmt.Printf("\n\n\nstart here \n")
+	fmt.Println(str)
 }
 
 // start a new client
