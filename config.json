@@ -23,23 +23,13 @@
                                             {
                                                 "key": "rule-id",
                                                 "value": "interface-state"
+                                            },
+                                            {
+                                                "key": "prefix",
+                                                "value": "openconfig-interfaces:"
                                             }
                                         ],
                                         "measurement": "external/cisco-check-interface-state-oc/interface_state/byoi"
-                                    },
-                                    {
-                                        "name": "external/cisco-check-system-cpu-mdt/cpu_utilization",
-                                        "kvs": [
-                                            {
-                                                "key": "path",
-                                                "value": "system-monitoring/cpu-utilization"
-                                            },
-                                            {
-                                                "key": "rule-id",
-                                                "value": "chassis-cpu-mdt"
-                                            }
-                                        ],
-                                        "measurement": "external/cisco-check-system-cpu-mdt/cpu_utilization/byoi"
                                     },
                                     {
                                         "name": "external/cisco-check-interface-traffic-health-oc/interface_stats_health",
@@ -51,6 +41,10 @@
                                             {
                                                 "key": "rule-id",
                                                 "value": "interface-traffic"
+                                            },
+                                            {
+                                                "key": "prefix",
+                                                "value": "openconfig-interfaces:"
                                             }
                                         ],
                                         "measurement": "external/cisco-check-interface-traffic-health-oc/interface_stats_health/byoi"
@@ -81,23 +75,13 @@
                                             {
                                                 "key": "rule-id",
                                                 "value": "interface-state"
+                                            },
+                                            {
+                                                "key": "prefix",
+                                                "value": "openconfig-interfaces:"
                                             }
                                         ],
                                         "measurement": "external/cisco-check-interface-state-oc/interface_state/byoi"
-                                    },
-                                    {
-                                        "name": "external/cisco-check-system-cpu-mdt/cpu_utilization",
-                                        "kvs": [
-                                            {
-                                                "key": "path",
-                                                "value": "system-monitoring/cpu-utilization"
-                                            },
-                                            {
-                                                "key": "rule-id",
-                                                "value": "chassis-cpu-mdt"
-                                            }
-                                        ],
-                                        "measurement": "external/cisco-check-system-cpu-mdt/cpu_utilization/byoi"
                                     },
                                     {
                                         "name": "external/cisco-check-interface-traffic-health-oc/interface_stats_health",
@@ -109,6 +93,10 @@
                                             {
                                                 "key": "rule-id",
                                                 "value": "interface-traffic"
+                                            },
+                                            {
+                                                "key": "prefix",
+                                                "value": "openconfig-interfaces:"
                                             }
                                         ],
                                         "measurement": "external/cisco-check-interface-traffic-health-oc/interface_stats_health/byoi"
