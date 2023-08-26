@@ -196,13 +196,42 @@ func ProcessKafkaMessage(message *gnfingest.Message, devices_keys []gnfingest.De
 				log.Infof("Rule-ID match %s Process rule\n", rule_id)
 				rule := rules[rule_id] // extract the rule in rules.json
 				log.Infof("Process rule-id %s\n", rule_id)
-				message.MessageProcessRule(&rule) //Process message with the rule from rule.json
+				// receive rawdata
+				rawdata := message.MessageProcessRule(&rule) //Process message with the rule from rule.json
+				MessageTestJsonMap(rawdata, &rule)
 			}
 		}
 		if !messageMatchRule {
 			log.Debugln("Message no matching rule in rules.json")
 		}
 	}
+}
+
+func MessageTestJsonMap(rawdata json.RawMessage, rule *gnfingest.RulesJSON) {
+	// Receive raw data section of message put in map
+	var objMap map[string]any
+	err := json.Unmarshal(rawdata, &objMap)
+	if err != nil {
+		fmt.Println("Unmarshal error", err)
+	}
+	fmt.Printf("Mapobject: %+v\n", objMap)
+	// check for key (path) in the map
+	//key := "interfaces/interface/state"
+	key := rule.Path // Key of the map is the path
+	value, ok := objMap[key]
+	fmt.Printf("key %+v is there %+v\n", value, ok)
+	if ok {
+		// Unmarshall to correct struct
+		var InterfaceState gnfingest.InterfacesInterfaceState
+		err = json.Unmarshal(rawdata, &InterfaceState)
+		if err != nil {
+			fmt.Println("Unmarshal error", err)
+		}
+	}
+	// Unmarshall
+	var Values gnfingest.Values
+	err = json.Unmarshal(rawdata, &Values)
+	log.Debugf("Struct Values %+v\n", Values)
 }
 
 func Test_json_map(rawdata json.RawMessage) {

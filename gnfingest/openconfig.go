@@ -52,37 +52,12 @@ func (m *Message) MessagePath() string {
 }
 
 // Message Method to process rule when message matched
-func (m *Message) MessageProcessRule(rule *RulesJSON) {
+func (m *Message) MessageProcessRule(rule *RulesJSON) json.RawMessage {
 	log.Debugf("rule %+v\n", rule)
 	//unpack the rawmessage section
 	log.Debugf("rule %s\n", m.Updates[0].Values)
 	rawdata := m.Updates[0].Values
-	messageTestJsonMap(rawdata)
-}
-
-func messageTestJsonMap(rawdata json.RawMessage) {
-	// Receive raw data section of message put in map
-	var objMap map[string]any
-	err := json.Unmarshal(rawdata, &objMap)
-	if err != nil {
-		fmt.Println("Unmarshal error", err)
-	}
-	fmt.Printf("Mapobject: %+v\n", objMap)
-	// check for key (path) in the map
-	key := "interfaces/interface/state"
-	value, ok := objMap[key]
-	fmt.Printf("key %+v is there %+v\n", value, ok)
-	if ok {
-		// Unmarshall to correct struct
-		var InterfaceState InterfacesInterfaceState
-		err = json.Unmarshal(rawdata, &InterfaceState)
-		if err != nil {
-			fmt.Println("Unmarshal error", err)
-		}
-		fmt.Printf("\nstate struct: %+v\n", InterfaceState)
-
-	}
-
+	return rawdata
 }
 
 // oc-interfaces Values with different paths struct
