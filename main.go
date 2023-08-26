@@ -173,7 +173,7 @@ func main() {
 }
 
 // Process the raw kafka message pointer to message (we do not change it)
-func ProcessKafkaMessage(message *gnfingest.Message, devices []gnfingest.Device_Keys) {
+func ProcessKafkaMessage(message *gnfingest.Message, devices_keys []gnfingest.Device_Keys) {
 	msgVerify := message.VerifyMessage()
 	if msgVerify != nil { // Not valid openconfig message
 		log.Infof("Error JSON message %s\n", msgVerify)
@@ -184,7 +184,9 @@ func ProcessKafkaMessage(message *gnfingest.Message, devices []gnfingest.Device_
 		log.Debugf("Source %s Path %s\n", messageSource, messagePath)
 
 		//Start matching message to configured rules in config.json
-		for _, d := range devices {
+		for _, d := range devices_keys {
+			log.Debugf("HELLOWORLD\n")
+			log.Debugf("device to match %+v\n", d)
 			fmt.Println("Device: ", d.DeviceName)
 			// Match Source Prefix Path
 			if (d.DeviceName == message.Source) && (d.KVS_prefix == message.Prefix) && (d.KVS_path == messagePath) {
