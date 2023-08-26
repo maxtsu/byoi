@@ -233,7 +233,8 @@ func MessageTestJsonMap(rawdata json.RawMessage, rule *gnfingest.RulesJSON) {
 	err = json.Unmarshal(rawdata, &Values)
 	log.Debugf("Struct Values %+v\n", Values)
 	v1 := Values.State.OperStatus
-	fmt.Printf("values Operstate %s", v1)
+	fmt.Printf("values Operstate %s\n", v1)
+	fmt.Printf("HELLOWORLD \n\n")
 }
 
 func Test_json_map(rawdata json.RawMessage) {
