@@ -183,25 +183,25 @@ func ProcessKafkaMessage(message *gnfingest.Message, devices_keys []gnfingest.De
 		messagePath := message.MessagePath()
 		messagePrefix := message.Prefix
 		log.Debugf("Source %s Path %s\n", messageSource, messagePath)
+		messageMatchRule := false //
 		//Start matching message to configured rules in config.json
 		for _, d := range devices_keys {
 			// Match Source-Prefix-Path
 			if (d.DeviceName == messageSource) && (d.KVS_prefix == messagePrefix) && (d.KVS_path == messagePath) {
+				messageMatchRule = true //flag message has matched a rules.json
 				log.Infof("name path and prefix match %s\n", d.DeviceName)
 				//Rule-id for processing
 				rule_id := d.KVS_rule_id
 				log.Infof("Rule-ID match %s Process rule\n", rule_id)
-				ProcessRule(message, rule_id)
+				rule := rules[rule_id] // extract the rule in rules.json
+				log.Infof("Process rule-id %s\n", rule_id)
+				message.MessageProcessRule(&rule) //Process message with the rule from rule.json
 			}
 		}
+		if !messageMatchRule {
+			log.Debugln("Message no matching rule in rules.json")
+		}
 	}
-}
-
-// Process rule when message matched
-func ProcessRule(message *gnfingest.Message, rule_id string) {
-	// extract the rule in rules.json
-	rule := rules[rule_id]
-	log.Debugf("rule %+v\n", rule)
 }
 
 func Test_json_map(rawdata json.RawMessage) {

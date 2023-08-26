@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+
+	"github.com/gologme/log"
 )
 
 // gnmic Message partial struct
@@ -47,6 +49,11 @@ func (m *Message) MessagePath() string {
 	// Extract message path remove index values []
 	re := regexp.MustCompile("[[].*?[]]")
 	return (re.ReplaceAllString(m.Updates[0].Path, ""))
+}
+
+// Process rule when message matched
+func (m *Message) MessageProcessRule(rule *RulesJSON) {
+	log.Debugf("rule %+v\n", rule)
 }
 
 // oc-interfaces Values with different paths struct
