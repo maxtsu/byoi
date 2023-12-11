@@ -68,7 +68,7 @@ func main() {
 	var r1 []gnfingest.RulesJSON
 	err = json.Unmarshal(byteResult, &r1)
 	if err != nil {
-		log.Error("Unmarshall error ", err)
+		log.Error("rules.json Unmarshall error ", err)
 	}
 	// create map of structs key=rule-id
 	//var rules = make(map[string]gnfingest.RulesJSON)
@@ -134,11 +134,10 @@ func main() {
 				//fmt.Printf("Got a kafka message\n")
 				log.Debugf("%% Message on %s: %s\n", e.TopicPartition, string(e.Value)[100:])
 				kafkaMessage := string(e.Value)
-				fmt.Printf("\nkafkaMessage: %s\n", kafkaMessage) //MEssage in single string
+				fmt.Printf("\nkafkaMessage: %s\n", kafkaMessage) //Message in single string
 				json.Unmarshal([]byte(kafkaMessage), &message)
 				// Start processing message
 				ProcessKafkaMessage(&message, device_keys)
-
 				if e.Headers != nil {
 					fmt.Printf("%% Headers: %v\n", e.Headers)
 				}
@@ -178,22 +177,22 @@ func ProcessKafkaMessage(message *openconfig.Message, devices_keys []gnfingest.D
 	} else { // Valid openconfig message
 		//Extract source IP and Path from message
 		messageSource := message.MessageSource()
-		messagePath := message.MessagePath()
-		messagePrefix := message.Prefix
-		log.Debugf("Source %s Path %s Prefix %s\n", messageSource, messagePath, messagePrefix)
+		messagePrefix := message.Tags.Prefix
+		messagePath := message.Tags.Path
+		log.Debugf("Message Source: %s Prefix: %s Path: %s\n", messageSource, messagePrefix, messagePath)
 		messageMatchRule := false //
-		//Start matching message to configured rules in config.json
+		//Start matching message to configured rules in config.json (device_keys)
 		for _, d := range devices_keys {
 			// Match Source-Prefix-Path
 			if (d.DeviceName == messageSource) && (d.KVS_prefix == messagePrefix) && (d.KVS_path == messagePath) {
 				messageMatchRule = true //flag message has matched a rules.json
 				//Rule-id for processing
 				rule_id := d.KVS_rule_id
-				log.Infof("Processing rule Rule-ID: %s For: %s\n", rule_id, d.DeviceName)
+				log.Infof("Processing rule Rule-ID: %s Device: %s\n", rule_id, d.DeviceName)
 				rule := rules[rule_id] // extract the rule in rules.json
-				log.Infof("Process rule-id %s\n", rule_id)
-				rawdata := message.Updates[0].Values //raw data is the values section of the message
-				ProcessJsonMessage(&rawdata, &rule)  //pass rawdata and rule to function
+				log.Infof("Process rule-id %s\n", rule.RuleID)
+				//ProcessJsonMessage(&message.Values, &rule)
+				ProcessJsonMessage(message, &rule)
 			}
 		}
 		if !messageMatchRule {
@@ -202,127 +201,41 @@ func ProcessKafkaMessage(message *openconfig.Message, devices_keys []gnfingest.D
 	}
 }
 
-func ProcessJsonMessage(rawdata *json.RawMessage, rule *gnfingest.RulesJSON) {
-	// Receive raw data section of message put in map
+func ProcessJsonMessage(message *openconfig.Message, rule *gnfingest.RulesJSON) {
+	// Receive raw data section of message (values) put in map
 	var rawDataMap map[string]any
-	err := json.Unmarshal(*rawdata, &rawDataMap)
+	err := json.Unmarshal(message.Values, &rawDataMap)
 	if err != nil {
-		fmt.Println("Unmarshal error", err)
+		fmt.Println("Kafka message Unmarshal error", err)
 	}
-	// fmt.Printf("Mapobject: %+v\n", rawDataMap)
+	// extract field values
+	getFields(rawDataMap, rule)
 
-	// Case switch for rule prefix
-	switch rule.Prefix { //path from message defines the struct
-	case "openconfig-interfaces:":
-		// Unmarshall to correct struct
-		var TopStruct openconfig.OpenconfigInterface
-		err = json.Unmarshal(*rawdata, &TopStruct)
-		if err != nil {
-			log.Errorln("Unmarshal error", err)
-		}
-	/*	fmt.Printf("TopStruct: %+v\n", TopStruct)
-		//iterate across different paths
-		for _, field := range rule.Fields { // only the first slice of paths
-			path := field.Path    //list of path to fields
-			values := field.Value //list of fields from the path
-			results := TopStruct.GetFields(path, values)
-			log.Debugf("results %+v", results)
-		}  */
-	default:
-		log.Errorln("No struct to match to")
+	//Extract list of indexes from the mapped values
+	for _, i := range rule.IndexValues {
+		//Get indexes
+		fmt.Printf("Index: %s value: %+v\n", i, message.Tags)
 	}
-	// Unmarshell to map __ try something different map hell!!!
-	Unpack_to_json_map(*rawdata, rule)
-}
-
-func Unpack_to_json_map(rawdata json.RawMessage, rule *gnfingest.RulesJSON) {
-	var valueJson map[string]any // Receive raw data section of message put in map
-	err := json.Unmarshal(rawdata, &valueJson)
-	if err != nil {
-		fmt.Println("Unmarshal error", err)
-	}
-	// from rule extract list of fields
-	path := []string{"interfaces/interface/state", "test"}
-	//path := []string{"interfaces/interface/state"}
-	fields := []string{"test1", "test2"}
-	//field := []string{"admin-status","oper-status"}
-
-	returnString := make(map[string]string)
-	getFields(valueJson, path, fields, returnString)
-	fmt.Println("returnString %+v", returnString)
-	// check for key (path)
-	key := "interfaces/interface/state"
-	value, ok := valueJson[key] // verify object in a amp
-	fmt.Printf("key %+v is there %+v\n", value, ok)
 
 }
 
-func getFields(valueJson map[string]any, pathList []string, fields []string, rtstr map[string]string) {
-	pathcopy := make([]string, len(pathList)) //make deepcopy
-	copy(pathcopy, pathList)                  // create copy of pathlist slice
-	fullPathString := strings.Join(pathList, "/")
-	parseMap(valueJson, pathcopy, fields, rtstr, &fullPathString)
-	// get index values
-
-}
-
-// try and make a function iterating nested maps ***change name aMap ****
-func parseMap(valueJson map[string]interface{}, pathList []string, fieldList []string,
-	rtstr map[string]string, pathString *string) {
-	fmt.Printf("PRINT the valueJson %+v\n", valueJson)
-	if len(pathList) <= 0 { //no items in slice
-		//Final folder extract field data here
-		fmt.Printf("REACHED FINAL FOLDER\n")
-		for _, f := range fieldList { // iterate the list of field data points required
-			_, ok := valueJson[f]
-			if ok { // key for field exists in folder
-				strValue := fmt.Sprintf("%v", valueJson[f])
-				fullField := *pathString + "/" + f //add full path+name to the field key
-				rtstr[fullField] = strValue
-			} else { // datapoint not in folder
-				log.Debugf("Key %s not in kafak message", f)
-				rtstr["Null"] = "Null"
-				//  insert a NULL fields['Null'] = 'Null'
-			}
-		}
-	} else { //iterate to the next folder
-		fmt.Printf("PRINT PATHLIST %+v\n", pathList)
-		value := valueJson[pathList[0]] //extract map of the next level
-		if value != nil {               // verify the next level exists
-			pathList = pathList[1:] // remove the first item of the pathList
-			fmt.Printf("LENGTH %d\n", len(pathList))
-			fmt.Printf("pathlist %+v val: %+v\n", pathList, value)
-			parseMap(value.(map[string]interface{}), pathList, fieldList, rtstr, pathString)
-		} else {
-			// the key/folder is not here
-			// need error check for no path
-			fmt.Printf("path not here\n")
-		}
+func getFields(rawDataMap map[string]any, rule *gnfingest.RulesJSON) {
+	// list of fields to collect
+	fmt.Printf("fields: %+v\n", rule.Fields)
+	//Extract list of field values from the mapped values
+	for _, f := range rule.Fields {
+		f = rule.Prefix + "/" + f //add prefix to path
+		//Get field value
+		fmt.Printf("field: %s value: %+v\n", f, rawDataMap[f])
 	}
-}
-func parseArray(anArray []interface{}, pathList []string, pathString *string) {
-	rtr := make(map[string]string)
-	rtr["Null"] = "Null"
-	for i, val := range anArray { //will iterate a nested map
-		switch concreteVal := val.(type) {
-		case map[string]interface{}:
-			fmt.Println("Index:", i)
-			parseMap(val.(map[string]interface{}), pathList, pathList, rtr, pathString) //mistake
-		case []interface{}:
-			fmt.Println("Index:", i)
-			parseArray(val.([]interface{}), pathList, pathString)
-		default:
-			fmt.Println("Index", i, ":", concreteVal)
 
-		}
-	}
 }
 
 func hometest(device_keys []gnfingest.Device_Keys) {
 	// Processing sample message
 	//var sample = "Sample4.json"
 	//var sample = "bgp.json"
-	var sample = "interface-state.json"
+	var sample = "ev-interface-state.json"
 	//var sample = "isis-1.json"
 	byteResult := gnfingest.ReadFile(sample)
 	// Unmarshal JSON message into struct
@@ -331,7 +244,8 @@ func hometest(device_keys []gnfingest.Device_Keys) {
 	if err != nil {
 		fmt.Println("Unmarshal error", err)
 	}
-
+	// fmt.Printf("message: %+v", kafkaMessage)
+	//fmt.Printf("Device_keys: %+v", device_keys)
 	// processs message just like a kafka message
 	ProcessKafkaMessage(&kafkaMessage, device_keys)
 

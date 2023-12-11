@@ -1,8 +1,6 @@
 package main
 
 import (
-	"byoi/gnfingest"
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -11,47 +9,30 @@ import (
 
 // main function
 func main() {
-	var sample = "interface-state.json"
-	byteResult := gnfingest.ReadFile(sample)
-	var kafkaMessage gnfingest.Message
-	err := json.Unmarshal(byteResult, &kafkaMessage)
-	if err != nil {
-		fmt.Println("Unmarshall error", err)
-	}
-	// extract source and prefix
-	fmt.Printf("Message: %+v\n", kafkaMessage)
-	fmt.Println("source: %s", kafkaMessage.Source)
-	fmt.Println("timestamp: %s", kafkaMessage.Timestamp)
-	fmt.Println("prefix: %s", kafkaMessage.Prefix)
-	fmt.Println("path: %s", kafkaMessage.Updates[0].Path)
-
-	//var source = kafkaMessage.Source
-	//var timestamp = kafkaMessage.Timestamp
-
-	fmt.Printf("\ntimestamp: %+v\n", kafkaMessage.Timestamp)
-
-	//unixTime := time.Unix(0, timestamp) //gives unix time stamp in utc
-
 	//ExampleClient_query(source, unixTime)
 
-	// Load rules.json into struct
-	var rulesfile = "rules.json"
-	byteResult = gnfingest.ReadFile(rulesfile)
-	var r []gnfingest.RulesJSON
-	err = json.Unmarshal(byteResult, &r)
-	if err != nil {
-		fmt.Println("Unmarshall error", err)
+	originalMap := map[string]string{}
+	originalMap["one"] = "this is one"
+	originalMap["two"] = "this is two"
+	newMap := originalMap
+
+	// deep copy a map
+	deepCopy := make(map[string]string)
+	for k, v := range originalMap {
+		deepCopy[k] = v
 	}
-	//fmt.Printf("Rules:  %+v\n", rules)
-	// create map of structs key=rule-id
-	var rules = make(map[string]gnfingest.RulesJSON)
-	for _, r := range r {
-		rules[r.RuleID] = r
-	}
-	//fmt.Printf("Rules:  %+v\n", rules)
-	str := fmt.Sprintf("%#v", rules)
-	fmt.Printf("\n\n\nstart here \n")
-	fmt.Println(str)
+
+	fmt.Println("1: confMap %+v newMap %+v deepCopy %+v", originalMap, newMap, deepCopy)
+	newMap["two"] = "this is changed"
+	fmt.Println("2: confMap %+v newMap %+v deepCopy %+v", originalMap, newMap, deepCopy)
+
+	source := []int{1, 2, 3, 4, 5}
+	destination := make([]int, len(source))
+	copy(destination, source)
+	source = append(source, 6, 7)
+	destination = destination[1:]
+	fmt.Println("1: source %s", source)
+	fmt.Println("1: destination %s", destination)
 }
 
 // start a new client

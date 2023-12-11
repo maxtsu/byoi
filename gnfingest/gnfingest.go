@@ -88,9 +88,9 @@ func (c *Configjson) DeviceDetails(keys []string) []Device_Keys {
 			dev.Measurement = s.Measurement
 			kvs_pairs := KVS_parsing(s.KVS, keys)
 			// Parameters from config.json {path}
-			dev.KVS_path = kvs_pairs[0]
-			dev.KVS_rule_id = kvs_pairs[1]
-			dev.KVS_prefix = kvs_pairs[2]
+			dev.KVS_path = kvs_pairs["path"]
+			dev.KVS_rule_id = kvs_pairs["rule-id"]
+			dev.KVS_prefix = kvs_pairs["prefix"]
 			device_keys = append(device_keys, dev)
 		}
 	}
@@ -123,25 +123,23 @@ func ReadFile(fileName string) []byte {
 }
 
 // Function to extract KVS pairs by key names passed into function
-func KVS_parsing(keys []KVS, keyString []string) []string {
+func KVS_parsing(keys []KVS, keyString []string) map[string]string {
 	// Build a config map:
 	confMap := map[string]string{}
 	for _, v := range keys {
 		confMap[v.Key] = v.Value
 	}
 	// Find values by key in the config map
-	//Return the value of keys requested in same order
-	valueString := []string{}
+	var results = make(map[string]string) //map for return values
 	for _, key := range keyString {
 		if v, ok := confMap[key]; ok {
-			value := v
-			valueString = append(valueString, value)
+			results[key] = v
 		} else {
 			fmt.Println(key, "not in config.json")
-			valueString = append(valueString, "")
+			results[key] = ""
 		}
 	}
-	return valueString
+	return results //return map of key-values
 }
 
 // Function to extract update path leaf values key-value(from path)
@@ -201,6 +199,15 @@ type InterfaceStateFields struct {
 }
 
 type RulesJSON struct {
+	Comment     string   `json:"comment"`
+	RuleID      string   `json:"rule-id"`
+	Path        string   `json:"path"`
+	Prefix      string   `json:"prefix"`
+	IndexValues []string `json:"index_values"`
+	Fields      []string `json:"fields"`
+}
+
+type OldRulesJSON struct {
 	Comment     string `json:"comment"`
 	RuleID      string `json:"rule-id"`
 	Path        string `json:"path"`

@@ -9,6 +9,10 @@
       "Path": "interfaces/interface[name=Bundle-Ether1]/state",
       "values": {
         "interfaces/interface/state": {
+          "test": {
+            "test1": "result_1",
+            "test2": "result_2"
+          },
           "admin-status": "UP",
           "counters": {
             "carrier-transitions": "0"

@@ -1,5 +1,8 @@
 {
     "cSpell.words": [
         "configjson"
+    ],
+    "cSpell.enableFiletypes": [
+        "!go"
     ]
 }

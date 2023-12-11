@@ -60,7 +60,7 @@
                                     "database": "hb-default:Cisco-virtual:node2",
                                     "retention-policy": "hb-default:Cisco-virtual:node2"
                                 },
-                                "system-id": "10.213.97.125"
+                                "system-id": "10.213.94.44"
                             },
                             {
                                 "name": "node5",
@@ -112,7 +112,7 @@
                                     "database": "hb-default:Cisco-virtual:node5",
                                     "retention-policy": "hb-default:Cisco-virtual:node5"
                                 },
-                                "system-id": "10.213.97.126"
+                                "system-id": "10.213.97.34"
                             }
                         ],
                         "device-group": "Cisco-virtual",
