@@ -1,8 +1,8 @@
 package main
 
 import (
+	"byoi/openconfig"
 	"encoding/json"
-	"event/openconfig"
 	"fmt"
 	"os"
 	"os/signal"
