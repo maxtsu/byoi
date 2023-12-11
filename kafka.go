@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"event/gnfingest"
 	"event/openconfig"
 	"fmt"
 	"os"
@@ -13,14 +12,6 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/gologme/log"
 )
-
-var configfile = "config.json"
-
-// var configfile = "/etc/byoi/config.json"
-var rulesfile = "rules.json"
-
-// Global variables 'rules'
-var rules = make(map[string]gnfingest.RulesJSON)
 
 func main() {
 	sigchan := make(chan os.Signal, 1)
