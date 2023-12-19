@@ -2,7 +2,6 @@ package main
 
 import (
 	"byoi/gnfingest"
-	"byoi/openconfig"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -13,6 +12,7 @@ import (
 
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/gologme/log"
+	client "github.com/influxdata/influxdb1-client/v2"
 )
 
 var configfile = "config.json"
@@ -20,21 +20,24 @@ var configfile = "config.json"
 // var configfile = "/etc/byoi/config.json"
 var rulesfile = "rules.json"
 
-// Global variables 'rules'
-var rules = make(map[string]gnfingest.RulesJSON)
+// Global variables 'Rules'
+var Rules = make(map[string]gnfingest.RulesJSON)
+
+// Getting Env details for TAND and group-id from ENV
+var tand_host = (os.Getenv("TAND_HOST") + ".healthbot")
+var tand_port = os.Getenv("TAND_PORT")
+
+// var tand_host = "192.168.1.1"
+// var tand_port = "8080"
+var group = (os.Getenv("CHANNEL'") + "-golang1")
 
 func main() {
-	// Getting Env details for TAND and group-id from ENV
-	//tand_host := (os.Getenv("TAND_HOST") + ".healthbot")
-	//tand_port := os.Getenv("TAND_PORT")
-	group := (os.Getenv("CHANNEL'") + "-golang1")
-
 	//convert the config.json to a struct
 	byteResult := gnfingest.ReadFile(configfile)
 	var configjson gnfingest.Configjson
 	err := json.Unmarshal(byteResult, &configjson)
 	if err != nil {
-		fmt.Println("Unmarshall error", err)
+		fmt.Println("config.json Unmarshall error", err)
 	}
 
 	// Set logging level From config.json
@@ -68,13 +71,14 @@ func main() {
 	var r1 []gnfingest.RulesJSON
 	err = json.Unmarshal(byteResult, &r1)
 	if err != nil {
-		log.Error("Unmarshall error ", err)
+		log.Error("rules.json Unmarshall error ", err)
 	}
 	// create map of structs key=rule-id
 	//var rules = make(map[string]gnfingest.RulesJSON)
 	for _, r := range r1 {
-		rules[r.RuleID] = r
+		Rules[r.RuleID] = r
 	}
+	fmt.Printf("Rules from rules.json: %+v", Rules)
 
 	// extract the brokers topics and configuration from the configjson KVS
 	kafkaCfg := gnfingest.KVS_parsing(configjson.Hbin.Inputs[0].Plugin.Config.KVS, []string{"brokers", "topics",
@@ -123,7 +127,6 @@ func main() {
 			run = false
 		default:
 			// Poll the consumer for messages or events
-			message := openconfig.Message{}
 			event := consumer.Poll(400)
 			if event == nil {
 				continue
@@ -132,13 +135,11 @@ func main() {
 			case *kafka.Message:
 				// Process the message received.
 				//fmt.Printf("Got a kafka message\n")
-				log.Debugf("%% Message on %s: %s\n", e.TopicPartition, string(e.Value)[100:])
+				log.Debugf("%% Message on %s: %s\n", e.TopicPartition, safeSlice(string(e.Value), 100))
 				kafkaMessage := string(e.Value)
-				fmt.Printf("\nkafkaMessage: %s\n", kafkaMessage) //MEssage in single string
-				json.Unmarshal([]byte(kafkaMessage), &message)
+				fmt.Printf("\nkafkaMessage: %s\n", kafkaMessage) //Message in single string
 				// Start processing message
-				ProcessKafkaMessage(&message, device_keys)
-
+				ProcessKafkaMessage([]byte(kafkaMessage), device_keys)
 				if e.Headers != nil {
 					fmt.Printf("%% Headers: %v\n", e.Headers)
 				}
@@ -170,177 +171,188 @@ func main() {
 	hometest(device_keys) //call hometest function
 }
 
+// Function to safely slice a string
+func safeSlice(slice string, length int) string {
+	if len(slice) < length {
+		length = len(slice)
+	}
+	return slice[:length]
+}
+
 // Process the raw kafka message pointer to message (we do not change it)
-func ProcessKafkaMessage(message *openconfig.Message, devices_keys []gnfingest.Device_Keys) {
-	msgVerify := message.MessageVerify()
-	if msgVerify != nil { // Not valid openconfig message
-		log.Infof("Error JSON message %s\n", msgVerify)
+func ProcessKafkaMessage(kafkaMessage []byte, devices_keys []gnfingest.Device_Key) {
+	// Kafka message convert to JSON struct
+	message := gnfingest.Message{}
+	err := json.Unmarshal([]byte(kafkaMessage), &message)
+	if err != nil {
+		log.Errorf("Kafka message Unmarshal error", err)
+	}
+	msgVerify := message.MessageVerify() //Verify the message struct schema
+	if msgVerify != nil {                // Not valid openconfig message
+		log.Infof("Ignore error JSON message %s\n", msgVerify)
 	} else { // Valid openconfig message
 		//Extract source IP and Path from message
 		messageSource := message.MessageSource()
-		messagePath := message.MessagePath()
-		messagePrefix := message.Prefix
-		log.Debugf("Source %s Path %s Prefix %s\n", messageSource, messagePath, messagePrefix)
-		messageMatchRule := false //
-		//Start matching message to configured rules in config.json
+		messagePrefix := message.Tags.Prefix
+		messagePath := message.Tags.Path
+		log.Debugf("Message Source: %s Prefix: %s Path: %s\n", messageSource, messagePrefix, messagePath)
+		messageMatchRule := false //Flag for match in message processing
+		//Start matching message to configured rules in config.json (device_keys)
 		for _, d := range devices_keys {
 			// Match Source-Prefix-Path
 			if (d.DeviceName == messageSource) && (d.KVS_prefix == messagePrefix) && (d.KVS_path == messagePath) {
-				messageMatchRule = true //flag message has matched a rules.json
+				messageMatchRule = true //flag message has matched a device in (device_keys) config.json
+
 				//Rule-id for processing
-				rule_id := d.KVS_rule_id
-				log.Infof("Processing rule Rule-ID: %s For: %s\n", rule_id, d.DeviceName)
-				rule := rules[rule_id] // extract the rule in rules.json
-				log.Infof("Process rule-id %s\n", rule_id)
-				rawdata := message.Updates[0].Values //raw data is the values section of the message
-				ProcessJsonMessage(&rawdata, &rule)  //pass rawdata and rule to function
+				//rule_id := d.KVS_rule_id
+				//log.Infof("Processing rule Rule-ID: %s Device: %s\n", rule_id, d.DeviceName)
+				//rule := rules[rule_id] // extract the rule in rules.json
+				//log.Infof("Process rule-id %s\n", rule.RuleID)
+
+				ProcessJsonMessage(&message, kafkaMessage, &d)
 			}
 		}
 		if !messageMatchRule {
-			log.Debugln("Message no matching rule in rules.json")
+			log.Debugln("Message no matching rule in config.json")
 		}
 	}
 }
 
-func ProcessJsonMessage(rawdata *json.RawMessage, rule *gnfingest.RulesJSON) {
-	// Receive raw data section of message put in map
+func ProcessJsonMessage(message *gnfingest.Message, kafkaMessage []byte, device_key *gnfingest.Device_Key) {
+	//Rule-id for processing
+	rule_id := device_key.KVS_rule_id
+	log.Infof("Processing rule Rule-ID: %s Device: %s\n", rule_id, device_key.DeviceName)
+	rule := Rules[rule_id] // extract the rule in rules.json
+	// From message extract Tags as rawdata
+	var rawTags gnfingest.MessageTags
+	err := json.Unmarshal(kafkaMessage, &rawTags)
+	if err != nil {
+		log.Errorf("Message openconfig.MessageTags Unmarshal error", err)
+	}
+	// Convert rawTags into mapped output for JSON searching
+	var tagMap map[string]any
+	err1 := json.Unmarshal(rawTags.Tags, &tagMap)
+	if err1 != nil {
+		log.Errorf("Message Tags to map Unmarshal error", err)
+	}
+
+	// Declare fields map with interface
+	var fields = make(map[string]interface{}) // fields & indexes from message
+
+	//list of Indexes from rule.json
+	for _, i := range rule.IndexValues {
+		//Get indexes from Tags mapped value
+		value := fmt.Sprintf("%v", tagMap[i]) //Convert all values into string
+		fields[i] = value                     // Add value to data map
+	}
+
+	log.Debugf("Index fields from message: %+v\n", fields)
+	// extract Field values
+	getFields(message, fields, &rule)
+	log.Debugf("Data & Index fields from message: %+v\n", fields)
+
+	// data for InfluxDB
+	time := message.Timestamp
+	//fields_data := fields
+	//var data = map[string]string
+
+	// Write to TSDB
+	//gnfingest.WriteTSDB(data)
+	// connect influxDB create Influx client return batchpoint
+	batchPoint, client := influxdbClient(tand_host, tand_port, device_key.Database)
+
+	influxPoint(batchPoint, client, device_key, time, fields)
+
+}
+
+func getFields(message *gnfingest.Message, fields map[string]interface{}, rule *gnfingest.RulesJSON) {
+	// Receive raw data section of message (values) put in map
 	var rawDataMap map[string]any
-	err := json.Unmarshal(*rawdata, &rawDataMap)
+	err := json.Unmarshal(message.Values, &rawDataMap)
 	if err != nil {
-		fmt.Println("Unmarshal error", err)
+		log.Errorf("Kafka Values message Unmarshal error", err)
 	}
-	// fmt.Printf("Mapobject: %+v\n", rawDataMap)
-
-	// Case switch for rule prefix
-	switch rule.Prefix { //path from message defines the struct
-	case "openconfig-interfaces:":
-		// Unmarshall to correct struct
-		var TopStruct openconfig.OpenconfigInterface
-		err = json.Unmarshal(*rawdata, &TopStruct)
-		if err != nil {
-			log.Errorln("Unmarshal error", err)
-		}
-	/*	fmt.Printf("TopStruct: %+v\n", TopStruct)
-		//iterate across different paths
-		for _, field := range rule.Fields { // only the first slice of paths
-			path := field.Path    //list of path to fields
-			values := field.Value //list of fields from the path
-			results := TopStruct.GetFields(path, values)
-			log.Debugf("results %+v", results)
-		}  */
-	default:
-		log.Errorln("No struct to match to")
+	// list of fields to collect rule.Fields
+	//Extract list of field values from the mapped values
+	//var fields = make(map[string]string)
+	for _, fi := range rule.Fields {
+		fp := rule.Prefix + "/" + fi               //add prefix to path
+		value := fmt.Sprintf("%v", rawDataMap[fp]) //Convert all values into string
+		fields[fi] = value                         //Get field value Add to fields map
 	}
-	// Unmarshell to map __ try something different map hell!!!
-	Unpack_to_json_map(*rawdata, rule)
+	//log.Debugf("Data fields extracted from message: %+v\n", fields)
 }
 
-func Unpack_to_json_map(rawdata json.RawMessage, rule *gnfingest.RulesJSON) {
-	var valueJson map[string]any // Receive raw data section of message put in map
-	err := json.Unmarshal(rawdata, &valueJson)
-	if err != nil {
-		fmt.Println("Unmarshal error", err)
-	}
-	// from rule extract list of fields
-	path := []string{"interfaces/interface/state", "test"}
-	//path := []string{"interfaces/interface/state"}
-	fields := []string{"test1", "test2"}
-	//field := []string{"admin-status","oper-status"}
-
-	returnString := make(map[string]string)
-	getFields(valueJson, path, fields, returnString)
-	fmt.Println("returnString %+v", returnString)
-	// check for key (path)
-	key := "interfaces/interface/state"
-	value, ok := valueJson[key] // verify object in a amp
-	fmt.Printf("key %+v is there %+v\n", value, ok)
-
-}
-
-func getFields(valueJson map[string]any, pathList []string, fields []string, rtstr map[string]string) {
-	pathcopy := make([]string, len(pathList)) //make deepcopy
-	copy(pathcopy, pathList)                  // create copy of pathlist slice
-	fullPathString := strings.Join(pathList, "/")
-	parseMap(valueJson, pathcopy, fields, rtstr, &fullPathString)
-	// get index values
-
-}
-
-// try and make a function iterating nested maps ***change name aMap ****
-func parseMap(valueJson map[string]interface{}, pathList []string, fieldList []string,
-	rtstr map[string]string, pathString *string) {
-	fmt.Printf("PRINT the valueJson %+v\n", valueJson)
-	if len(pathList) <= 0 { //no items in slice
-		//Final folder extract field data here
-		fmt.Printf("REACHED FINAL FOLDER\n")
-		for _, f := range fieldList { // iterate the list of field data points required
-			_, ok := valueJson[f]
-			if ok { // key for field exists in folder
-				strValue := fmt.Sprintf("%v", valueJson[f])
-				fullField := *pathString + "/" + f //add full path+name to the field key
-				rtstr[fullField] = strValue
-			} else { // datapoint not in folder
-				log.Debugf("Key %s not in kafak message", f)
-				rtstr["Null"] = "Null"
-				//  insert a NULL fields['Null'] = 'Null'
-			}
-		}
-	} else { //iterate to the next folder
-		fmt.Printf("PRINT PATHLIST %+v\n", pathList)
-		value := valueJson[pathList[0]] //extract map of the next level
-		if value != nil {               // verify the next level exists
-			pathList = pathList[1:] // remove the first item of the pathList
-			fmt.Printf("LENGTH %d\n", len(pathList))
-			fmt.Printf("pathlist %+v val: %+v\n", pathList, value)
-			parseMap(value.(map[string]interface{}), pathList, fieldList, rtstr, pathString)
-		} else {
-			// the key/folder is not here
-			// need error check for no path
-			fmt.Printf("path not here\n")
-		}
-	}
-}
-func parseArray(anArray []interface{}, pathList []string, pathString *string) {
-	rtr := make(map[string]string)
-	rtr["Null"] = "Null"
-	for i, val := range anArray { //will iterate a nested map
-		switch concreteVal := val.(type) {
-		case map[string]interface{}:
-			fmt.Println("Index:", i)
-			parseMap(val.(map[string]interface{}), pathList, pathList, rtr, pathString) //mistake
-		case []interface{}:
-			fmt.Println("Index:", i)
-			parseArray(val.([]interface{}), pathList, pathString)
-		default:
-			fmt.Println("Index", i, ":", concreteVal)
-
-		}
-	}
-}
-
-func hometest(device_keys []gnfingest.Device_Keys) {
+func hometest(device_keys []gnfingest.Device_Key) {
 	// Processing sample message
-	//var sample = "Sample4.json"
-	//var sample = "bgp.json"
-	var sample = "interface-state.json"
+	var sample = "ev-interface-state.json"
 	//var sample = "isis-1.json"
 	byteResult := gnfingest.ReadFile(sample)
-	// Unmarshal JSON message into struct
-	var kafkaMessage openconfig.Message
-	err := json.Unmarshal(byteResult, &kafkaMessage)
-	if err != nil {
-		fmt.Println("Unmarshal error", err)
-	}
 
+	// fmt.Printf("message: %+v", kafkaMessage)
+	//fmt.Printf("Device_keys: %+v", device_keys)
 	// processs message just like a kafka message
-	ProcessKafkaMessage(&kafkaMessage, device_keys)
+	ProcessKafkaMessage(byteResult, device_keys)
 
-	// parse to extract path & indexes from "Path:" value in message
-	/*	var result []string
-		var k1 = make(map[string][]gnfingest.KVS)
-		result, k1 = gnfingest.PathExtract(kafkaMessage.Updates[0].Path)
-		fmt.Println("path list: %+v\n", result)
-		fmt.Println("map of keys: %+v\n", k1)
+}
 
-		Test_json_map(kafkaMessage.Updates[0].Values) */
+// create InfluxDB v1.8 client
+func influxdbClient(tand_host string, tand_port string, database string) (client.BatchPoints, client.Client) {
+	url := "https://" + tand_host + ":" + tand_port
+	// create client
+	c, err := client.NewHTTPClient(client.HTTPConfig{
+		Addr: url,
+	})
+	if err != nil {
+		log.Errorf("Error creating InfluxDB Client: ", err)
+	}
+	defer c.Close()
+	log.Infof("Created InfluxDB Client: %+v", c)
+
+	// Create a new point batch for database
+	bp, _ := client.NewBatchPoints(client.BatchPointsConfig{
+		Database: database,
+		//Precision: "s",
+	})
+	fmt.Printf("Client create with BP %+v %+v", bp, c)
+	return bp, c
+}
+
+// Point defines the fields that will be written to the database
+// Measurement, Time, and Fields are required
+// Precision can be specified if the time is in epoch format (integer).
+// Valid values for Precision are n, u, ms, s, m, and h
+/* type Point struct {
+	Measurement string
+	Tags        map[string]string
+	Time        time.Time
+	Fields      map[string]interface{}
+	Precision   string
+	Raw         string
+} */
+
+// create InfluxDB v1.8 point
+func influxPoint(bp client.BatchPoints, c client.Client, device *gnfingest.Device_Key, timestamp int64, fields map[string]interface{}) {
+	/*
+		#Create json data package for TSDB
+		data = {"measurement":matching_rule[4],"time":timestamp,"source":matching_rule[1],"fields":fields}
+	*/
+	// Create a point and add to batch
+	//tags := map[string]string{"source": device.DeviceName, "measurement": device.Measurement, "time": timestamp}
+	tags := map[string]string{}
+	// fields := map[string]interface{}{"admin-status": "UP","oper-status":  "DOWN",}
+	time := time.Unix(0, timestamp)
+	pt, err := client.NewPoint(device.Measurement, tags, fields, time)
+	if err != nil {
+		fmt.Println("Error: ", err.Error())
+	}
+	bp.AddPoint(pt)
+
+	// Write the batch test
+	err = c.Write(bp)
+	if err != nil {
+		fmt.Println("Error: ", err.Error())
+	} else {
+		fmt.Printf("BP Wrote %+v", bp)
+	}
 }

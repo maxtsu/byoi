@@ -1,7 +1,6 @@
 package gnfingest
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -9,54 +8,6 @@ import (
 
 	"github.com/gologme/log"
 )
-
-// gnmic Event Message partial struct
-type Message struct {
-	Name      string `json:"name"`
-	Timestamp int64  `json:"timestamp"`
-	Tags      struct {
-		Path             string `json:"path"`
-		Prefix           string `json:"prefix"`
-		Source           string `json:"source"`
-		SubscriptionName string `json:"subscription-name"`
-	} `json:"tags"`
-	Values json.RawMessage `json:"values"`
-}
-
-// Message Method to verify openconfig JSON event message
-func (m *Message) MessageVerify() error {
-	if m.Name == "" {
-		return fmt.Errorf("no Name field in message")
-	} else if m.Tags.Prefix == "" {
-		return fmt.Errorf("no Prefix field in message")
-	} else if m.Tags.Source == "" {
-		return fmt.Errorf("no Source field in message")
-	} else if string(m.Tags.Path) == "" {
-		return fmt.Errorf("no Path field in message")
-	} else if string(m.Values) == "" {
-		return fmt.Errorf("no Values field in message")
-	} else { // This openconfig message is OK
-		return nil
-	}
-}
-
-// Message Method to extract source IP & path
-func (m *Message) MessageSource() string {
-	// Extract message source IP remove port number
-	var source string
-	if strings.Contains(m.Tags.Source, ":") {
-		s := strings.Split(m.Tags.Source, ":")
-		source = s[0]
-	} else {
-		source = m.Tags.Source
-	}
-	return source
-}
-
-// gnmic Event Message Tags only as raw data
-type MessageTags struct {
-	Tags json.RawMessage `json:"tags"`
-}
 
 // The Top struct for the config.json
 type Configjson struct {
@@ -193,12 +144,67 @@ func KVS_parsing(keys []KVS, keyString []string) map[string]string {
 	return results //return map of key-values
 }
 
+// Function to extract update path leaf values key-value(from path)
+// return list (slice) of the path in folders
+// returns a map of {folder,{key1:value1,key2:value2},etc.}
+func PathExtract(path string) ([]string, map[string][]KVS) {
+	//split into folders by forward slash Ignore slash inside square brackets
+	var result []string
+	var keys = make(map[string][]KVS)
+	var kvs = []KVS{}
+	var kstart int
+	length := len(path)
+	inbracket := false
+	i := 0
+	for j, c := range path {
+		if c == '[' {
+			if path[j-1] != ']' {
+				result = append(result, path[i:j])
+				kstart = j + 1
+				inbracket = true
+			} else {
+				kstart = j + 1
+				inbracket = true
+			}
+		} else if c == ']' {
+			split := strings.Split(path[kstart:j], "=")
+			k := KVS{Key: split[0], Value: split[1]}
+			kvs = append(kvs, k)
+			inbracket = false
+		} else if c == '/' && !inbracket {
+			if path[j-1] != ']' {
+				result = append(result, path[i:j])
+			} else {
+				// add all kvs pairs to the map item for that folder
+				keys[result[len(result)-1]] = kvs
+				kvs = nil
+			}
+			i = j + 1
+		} else if j == (length - 1) {
+			result = append(result, path[i:])
+		}
+	}
+	return result, keys
+}
+
 // Function to write data package to TSDB
 func WriteTSDB(data map[string]string) {
 	log.Infof("write TSDB: %+v\n", data)
 }
 
-// Struct define a rule in rules.json
+type Points struct {
+	Measurement          string               `json:"measurement"`
+	Time                 int64                `json:"time"`
+	Source               string               `json:"source"`
+	InterfaceStateFields InterfaceStateFields `json:"fields"`
+}
+
+// Interface state fields
+type InterfaceStateFields struct {
+	Admin_status string `json:"admin-status"`
+	Oper_status  string `json:"oper-status"`
+}
+
 type RulesJSON struct {
 	Comment     string   `json:"comment"`
 	RuleID      string   `json:"rule-id"`
@@ -208,9 +214,17 @@ type RulesJSON struct {
 	Fields      []string `json:"fields"`
 }
 
-// Influx client for a device
-type InfluxClient struct {
-	Device   string
-	Source   string
-	Database string
+type OldRulesJSON struct {
+	Comment     string `json:"comment"`
+	RuleID      string `json:"rule-id"`
+	Path        string `json:"path"`
+	Prefix      string `json:"prefix"`
+	IndexValues []struct {
+		Path  string `json:"path"`
+		Index string `json:"index"`
+	} `json:"index_values"`
+	Fields []struct {
+		Path  []string `json:"path"`
+		Value []string `json:"value"`
+	} `json:"fields"`
 }

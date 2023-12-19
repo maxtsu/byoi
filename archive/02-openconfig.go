@@ -57,6 +57,11 @@ func (m *Message) MessageSource() string {
 	return source
 }
 
+// gnmic Event Message Tags only as raw data
+type MessageTags struct {
+	Tags json.RawMessage `json:"tags"`
+}
+
 // gnmic Message partial struct
 type OldMessage struct {
 	Source           string `json:"source"`
