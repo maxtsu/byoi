@@ -21,24 +21,25 @@ func main() {
 
 	//writeAPI := WriteApi(database, tandClient)
 	writeAPI := tandClient.WriteAPI("my-org", database)
-	// Create a point
-	tags := map[string]string{}
-	fields := map[string]interface{}{
-		"source":       "nodeX",
-		"admin-status": "UP",
-		"oper-status":  "DOWN",
+
+	for i := 0; i < 20; i++ {
+		// Create a point
+		tags := map[string]string{}
+		fields := map[string]interface{}{
+			"source":       "nodeX",
+			"admin-status": "UP",
+			"oper-status":  "DOWN",
+			"bytes_sent":   i,
+		}
+
+		p := influxdb2.NewPoint(
+			measurement, tags, fields, time.Now(),
+		)
+		//Write point to the writeAPI
+		writeAPI.WritePoint(p)
+		time.Sleep(4 * time.Second)
 	}
 
-	p := influxdb2.NewPoint(
-		measurement, tags, fields, time.Now(),
-	)
-	/*
-	   p := influxdb2.NewPoint("stat",
-	       map[string]string{"unit": "temperature"},
-	       map[string]interface{}{"avg": 24.5, "max": 45.0},
-	       time.Now()) */
-
-	writeAPI.WritePoint(p)
 	// Force all unwritten data to be sent
 	writeAPI.Flush()
 	// Ensures background processes finishes
@@ -55,7 +56,7 @@ func InfluxdbClient(tand_host string, tand_port string) influxdb2.Client {
 	}) */
 
 	c := influxdb2.NewClientWithOptions(url, "my-token",
-		influxdb2.DefaultOptions().SetBatchSize(20))
+		influxdb2.DefaultOptions().SetBatchSize(5))
 	defer c.Close()
 	log.Infof("Created InfluxDB Client: %+v\n", c)
 	return c //return the client
