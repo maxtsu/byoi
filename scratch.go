@@ -6,7 +6,6 @@ import (
 
 	"github.com/gologme/log"
 	"github.com/influxdata/influxdb/client/v2"
-	//client "github.com/influxdata/influxdb1-client/v2"
 )
 
 // main function
@@ -73,35 +72,6 @@ func DatabaseBp(database string) client.BatchPoints {
 	//fmt.Printf("Client create with BP %+v %+v", bp, c)
 	return bp
 }
-
-// create InfluxDB v1.8 client
-/*
-func InfluxdbClient(tand_host string, tand_port string) client.Client {
-	url := "http://" + tand_host + ":" + tand_port
-	//config := client.HTTPConfig{Addr: url}
-	//c, err := client.NewHTTPClient(config)
-	// create client
-	c, err := client.NewHTTPClient(client.HTTPConfig{
-		Addr: url,
-	})
-	if err != nil {
-		log.Errorf("Error creating InfluxDB Client: ", err)
-	}
-	defer c.Close()
-	log.Infof("Created InfluxDB Client: %+v\n", c)
-	return c //return the client
-}
-
-// create InfluxDB batchpoint with database
-func DatabaseBp(database string) client.BatchPoints {
-	// Create a new point batch for database
-	bp, _ := client.NewBatchPoints(client.BatchPointsConfig{
-		Database: database,
-		//Precision: "s",
-	})
-	//fmt.Printf("Client create with BP %+v %+v", bp, c)
-	return bp
-} */
 
 func InfluxDB2() {
 	// Create a new HTTPClient
