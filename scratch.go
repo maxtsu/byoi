@@ -39,9 +39,11 @@ func main() {
 	tand_host := "localhost"
 	tand_port := "8086"
 	database := "hb-default:cisco:cisco-B"
+	measurement := "external/bt-kafka/cisco_resources/byoi"
 	tandClient := InfluxdbClient(tand_host, tand_port)
 	fmt.Printf("Client create with client %+v\n", tandClient)
 
+	//create batch point with database
 	batchPoint := DatabaseBp(database)
 	fmt.Printf("Client create with BP %+v\n", batchPoint)
 
@@ -51,16 +53,21 @@ func main() {
 		"admin-status": "UP",
 		"oper-status":  "DOWN",
 	}
-	pt, err := client.NewPoint("cpu_usage", tags, fields, time.Now())
+	pt, err := client.NewPoint(measurement, tags, fields, time.Now())
 	if err != nil {
-		fmt.Println("Error: ", err.Error())
+		fmt.Println("New point Error: ", err.Error())
 	} else {
 		fmt.Println("Created point: ", pt)
 	}
 	batchPoint.AddPoint(pt)
 
 	// Write the batch test
-	tandClient.Write(batchPoint)
+	err = tandClient.Write(batchPoint)
+	if err != nil {
+		fmt.Println("Write Error: ", err.Error())
+	} else {
+		fmt.Println("Succesful write")
+	}
 }
 
 // create InfluxDB v1.8 client
