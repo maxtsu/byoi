@@ -39,7 +39,7 @@ func main() {
 	tand_host := "localhost"
 	tand_port := "8086"
 	Database := "hb-default:cisco:cisco-B"
-	batchPoint, client := influxdbClient(tand_host, tand_port, Database)
+	batchPoint, client := InfluxdbClient(tand_host, tand_port, Database)
 
 	fmt.Printf("Client create with BP %+v\n", batchPoint)
 	fmt.Printf("Client create with client %+v\n", client)
