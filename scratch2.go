@@ -48,14 +48,15 @@ func InfluxDB2() {
 	}
 	fmt.Printf("Created batchP: %+v\n", bp)
 	// Create a point and add to batch
-	tags := map[string]string{"cpu": "cpu-total"}
+	measurement := "external/bt-kafka/cisco_resources/byoi"
+	tags := map[string]string{}
 	fields := map[string]interface{}{
 		"idle":   10.1,
 		"system": 53.3,
 		"user":   46.6,
 	}
 
-	pt, err := client.NewPoint("cpu_usage", tags, fields, time.Now())
+	pt, err := client.NewPoint(measurement, tags, fields, time.Now())
 	if err != nil {
 		log.Fatal(err)
 		fmt.Printf("err: \n")
