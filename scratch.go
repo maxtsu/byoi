@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/gologme/log"
-	"github.com/influxdata/influxdb-client-go/api"
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 )
 
@@ -20,8 +19,8 @@ func main() {
 	tandClient := InfluxdbClient(tand_host, tand_port)
 	fmt.Printf("Client create with client %+v\n", tandClient)
 
-	writeAPI := WriteApi(database, tandClient)
-
+	//writeAPI := WriteApi(database, tandClient)
+	writeAPI := tandClient.WriteAPI(database, "my-bucket")
 	// Create a point
 	tags := map[string]string{}
 	fields := map[string]interface{}{
@@ -33,8 +32,13 @@ func main() {
 	p := influxdb2.NewPoint(
 		measurement, tags, fields, time.Now(),
 	)
-	writeAPI.WritePoint(p)
+	/*
+	   p := influxdb2.NewPoint("stat",
+	       map[string]string{"unit": "temperature"},
+	       map[string]interface{}{"avg": 24.5, "max": 45.0},
+	       time.Now()) */
 
+	writeAPI.WritePoint(p)
 	// Force all unwritten data to be sent
 	writeAPI.Flush()
 	// Ensures background processes finishes
@@ -55,11 +59,4 @@ func InfluxdbClient(tand_host string, tand_port string) influxdb2.Client {
 	defer c.Close()
 	log.Infof("Created InfluxDB Client: %+v\n", c)
 	return c //return the client
-}
-
-// create InfluxDB batchpoint with database
-func WriteApi(database string, client influxdb2.Client) api.WriteApi {
-	// Get non-blocking write client
-	writeAPI := client.WriteAPI(database, "my-bucket")
-	return writeAPI
 }
