@@ -5,7 +5,8 @@ import (
 	"time"
 
 	"github.com/gologme/log"
-	"github.com/influxdata/influxdb/client/v2"
+	"github.com/influxdata/influxdb-client-go/api"
+	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 )
 
 // main function
@@ -15,105 +16,50 @@ func main() {
 	tand_port := "8086"
 	database := "hb-default:cisco:cisco-B"
 	measurement := "external/bt-kafka/cisco_resources/byoi"
+	//Create client
 	tandClient := InfluxdbClient(tand_host, tand_port)
 	fmt.Printf("Client create with client %+v\n", tandClient)
 
-	//create batch point with database
-	batchPoint := DatabaseBp(database)
-	fmt.Printf("Client create with BP %+v\n", batchPoint)
+	writeAPI := WriteApi(database, tandClient)
 
-	// Create a point and add to batch
+	// Create a point
 	tags := map[string]string{}
 	fields := map[string]interface{}{
 		"source":       "nodeX",
 		"admin-status": "UP",
 		"oper-status":  "DOWN",
 	}
-	pt, err := client.NewPoint(measurement, tags, fields, time.Now())
-	if err != nil {
-		fmt.Println("New point Error: ", err.Error())
-	} else {
-		fmt.Println("Created point: ", pt)
-	}
-	batchPoint.AddPoint(pt)
 
-	// Write the batch test
-	err = tandClient.Write(batchPoint)
-	if err != nil {
-		fmt.Println("Write Error: ", err.Error())
-	} else {
-		fmt.Println("Succesful write")
-	}
+	p := influxdb2.NewPoint(
+		measurement, tags, fields, time.Now(),
+	)
+	writeAPI.WritePoint(p)
+
+	// Force all unwritten data to be sent
+	writeAPI.Flush()
+	// Ensures background processes finishes
+	tandClient.Close()
 }
 
-func InfluxdbClient(tand_host string, tand_port string) client.Client {
+func InfluxdbClient(tand_host string, tand_port string) influxdb2.Client {
 	url := "http://" + tand_host + ":" + tand_port
 	//config := client.HTTPConfig{Addr: url}
 	//c, err := client.NewHTTPClient(config)
 	// create client
-	c, err := client.NewHTTPClient(client.HTTPConfig{
+	/*	c, err := client.NewHTTPClient(client.HTTPConfig{
 		Addr: url,
-	})
-	if err != nil {
-		log.Errorf("Error creating InfluxDB Client: ", err)
-	}
+	}) */
+
+	c := influxdb2.NewClientWithOptions(url, "my-token",
+		influxdb2.DefaultOptions().SetBatchSize(20))
 	defer c.Close()
 	log.Infof("Created InfluxDB Client: %+v\n", c)
 	return c //return the client
 }
 
 // create InfluxDB batchpoint with database
-func DatabaseBp(database string) client.BatchPoints {
-	// Create a new point batch for database
-	bp, _ := client.NewBatchPoints(client.BatchPointsConfig{
-		Database: database,
-		//Precision: "s",
-	})
-	//fmt.Printf("Client create with BP %+v %+v", bp, c)
-	return bp
-}
-
-func InfluxDB2() {
-	// Create a new HTTPClient
-	c, err := client.NewHTTPClient(client.HTTPConfig{
-		Addr: "http://localhost:8086",
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer c.Close()
-
-	// Create a new point batch
-	MyDB := "hb-default:cisco:cisco-B"
-	bp, err := client.NewBatchPoints(client.BatchPointsConfig{
-		Database:  MyDB,
-		Precision: "s",
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Create a point and add to batch
-	tags := map[string]string{"cpu": "cpu-total"}
-	fields := map[string]interface{}{
-		"idle":   10.1,
-		"system": 53.3,
-		"user":   46.6,
-	}
-
-	pt, err := client.NewPoint("cpu_usage", tags, fields, time.Now())
-	if err != nil {
-		log.Fatal(err)
-	}
-	bp.AddPoint(pt)
-
-	// Write the batch
-	if err := c.Write(bp); err != nil {
-		log.Fatal(err)
-	}
-
-	// Close client resources
-	if err := c.Close(); err != nil {
-		log.Fatal(err)
-	}
+func WriteApi(database string, client influxdb2.Client) api.WriteApi {
+	// Get non-blocking write client
+	writeAPI := client.WriteAPI(database, "my-bucket")
+	return writeAPI
 }
