@@ -72,7 +72,7 @@ func main() {
 
 // create InfluxDB v1.8 client
 func InfluxdbClient(tand_host string, tand_port string) client.Client {
-	url := "https://" + tand_host + ":" + tand_port
+	url := "http://" + tand_host + ":" + tand_port
 	config := client.HTTPConfig{Addr: url, InsecureSkipVerify: true}
 	// create client
 	/*c, err := client.NewHTTPClient(client.HTTPConfig{
@@ -96,38 +96,4 @@ func DatabaseBp(database string) client.BatchPoints {
 	})
 	//fmt.Printf("Client create with BP %+v %+v", bp, c)
 	return bp
-}
-
-// start a new client
-func ExampleClient_query(source string, timestamp time.Time) {
-	c, err := client.NewHTTPClient(client.HTTPConfig{
-		Addr: "http://10.54.182.2:8086",
-	})
-	fmt.Printf("opened client\n")
-	if err != nil {
-		fmt.Println("Error creating InfluxDB Client: ", err.Error())
-	}
-	defer c.Close()
-
-	// Create a new point batch
-	bp, _ := client.NewBatchPoints(client.BatchPointsConfig{
-		Database: "TEST01",
-		//Precision: "s",
-	})
-
-	// Create a point and add to batch
-	tags := map[string]string{"source": source}
-	fields := map[string]interface{}{
-		"admin-status": "UP",
-		"oper-status":  "DOWN",
-	}
-	pt, err := client.NewPoint("cpu_usage", tags, fields, time.Now())
-	if err != nil {
-		fmt.Println("Error: ", err.Error())
-	}
-	bp.AddPoint(pt)
-
-	// Write the batch test
-	c.Write(bp)
-
 }
