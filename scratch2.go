@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/gologme/log"
@@ -15,7 +16,7 @@ func main() {
 
 	InfluxDB2()
 
-	// Write the batch test
+	// Write the batch test vv
 	/*err = tandClient.Write(batchPoint)
 	if err != nil {
 		fmt.Println("Write Error: ", err.Error())
@@ -32,7 +33,7 @@ func InfluxDB2() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Infof("Created InfluxDB Client: %+v\n", c)
+	fmt.Printf("Created InfluxDB Client: %+v\n", c)
 	defer c.Close()
 
 	// Create a new point batch
@@ -43,8 +44,9 @@ func InfluxDB2() {
 	})
 	if err != nil {
 		log.Fatal(err)
+		fmt.Printf("err: \n")
 	}
-	log.Infof("Created batchP: %+v\n", bp)
+	fmt.Printf("Created batchP: %+v\n", bp)
 	// Create a point and add to batch
 	tags := map[string]string{"cpu": "cpu-total"}
 	fields := map[string]interface{}{
@@ -56,18 +58,21 @@ func InfluxDB2() {
 	pt, err := client.NewPoint("cpu_usage", tags, fields, time.Now())
 	if err != nil {
 		log.Fatal(err)
+		fmt.Printf("err: \n")
 	}
 	bp.AddPoint(pt)
 
 	// Write the batch
 	if err := c.Write(bp); err != nil {
 		log.Fatal(err)
+		fmt.Printf("err: \n")
 	} else {
-		log.Infof("Succesful write: \n")
+		fmt.Printf("Succesful write: \n")
 	}
 
 	// Close client resources
 	if err := c.Close(); err != nil {
 		log.Fatal(err)
+		fmt.Printf("err: \n")
 	}
 }
