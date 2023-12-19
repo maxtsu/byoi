@@ -6,7 +6,7 @@ import (
 
 	"github.com/gologme/log"
 	client "github.com/influxdata/influxdb1-client/v2"
-)
+) //test with different 'client'
 
 // main function
 func main() {
@@ -38,16 +38,31 @@ func main() {
 	// connect influxDB create Influx client return batchpoint
 	tand_host := "localhost"
 	tand_port := "8086"
-	Database := "hb-default:cisco:cisco-B"
-	batchPoint, client := InfluxdbClient(tand_host, tand_port, Database)
+	database := "hb-default:cisco:cisco-B"
+	tandClient := InfluxdbClient(tand_host, tand_port)
+	fmt.Printf("Client create with client %+v\n", tandClient)
 
+	batchPoint := DatabaseBp(database)
 	fmt.Printf("Client create with BP %+v\n", batchPoint)
-	fmt.Printf("Client create with client %+v\n", client)
 
+	// Create a point and add to batch
+	tags := map[string]string{"source": "nodeA"}
+	fields := map[string]interface{}{
+		"admin-status": "UP",
+		"oper-status":  "DOWN",
+	}
+	pt, err := client.NewPoint("cpu_usage", tags, fields, time.Now())
+	if err != nil {
+		fmt.Println("Error: ", err.Error())
+	}
+	batchPoint.AddPoint(pt)
+
+	// Write the batch test
+	tandClient.Write(batchPoint)
 }
 
 // create InfluxDB v1.8 client
-func InfluxdbClient(tand_host string, tand_port string, database string) (client.BatchPoints, client.Client) {
+func InfluxdbClient(tand_host string, tand_port string) client.Client {
 	url := "https://" + tand_host + ":" + tand_port
 	// create client
 	c, err := client.NewHTTPClient(client.HTTPConfig{
@@ -58,14 +73,18 @@ func InfluxdbClient(tand_host string, tand_port string, database string) (client
 	}
 	defer c.Close()
 	log.Infof("Created InfluxDB Client: %+v\n", c)
+	return c //return the client
+}
 
+// create InfluxDB batchpoint with database
+func DatabaseBp(database string) client.BatchPoints {
 	// Create a new point batch for database
 	bp, _ := client.NewBatchPoints(client.BatchPointsConfig{
 		Database: database,
 		//Precision: "s",
 	})
 	//fmt.Printf("Client create with BP %+v %+v", bp, c)
-	return bp, c
+	return bp
 }
 
 // start a new client
