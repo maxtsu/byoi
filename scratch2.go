@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/gologme/log"
-	"github.com/influxdata/influxdb/client/v2"
+	client "github.com/influxdata/influxdb/client/v2"
 )
 
 // main function
@@ -32,6 +32,7 @@ func InfluxDB2() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Infof("Created InfluxDB Client: %+v\n", c)
 	defer c.Close()
 
 	// Create a new point batch
