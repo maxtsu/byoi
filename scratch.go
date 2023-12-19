@@ -20,7 +20,7 @@ func main() {
 	fmt.Printf("Client create with client %+v\n", tandClient)
 
 	//writeAPI := WriteApi(database, tandClient)
-	writeAPI := tandClient.WriteAPI(database, "my-bucket")
+	writeAPI := tandClient.WriteAPI("my-org", database)
 	// Create a point
 	tags := map[string]string{}
 	fields := map[string]interface{}{
