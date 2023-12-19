@@ -6,7 +6,7 @@ import (
 
 	"github.com/gologme/log"
 	"github.com/influxdata/influxdb/client/v2"
-	//client "github.com/influxdata/influxdb1-client/v2"
+	client "github.com/influxdata/influxdb1-client/v2"
 )
 
 // main function
