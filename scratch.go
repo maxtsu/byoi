@@ -54,6 +54,8 @@ func main() {
 	pt, err := client.NewPoint("cpu_usage", tags, fields, time.Now())
 	if err != nil {
 		fmt.Println("Error: ", err.Error())
+	} else {
+		fmt.Println("Created point: ", pt)
 	}
 	batchPoint.AddPoint(pt)
 
