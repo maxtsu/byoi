@@ -10,31 +10,6 @@ import (
 
 // main function
 func main() {
-	//ExampleClient_query(source, unixTime)
-
-	originalMap := map[string]string{}
-	originalMap["one"] = "this is one"
-	originalMap["two"] = "this is two"
-	newMap := originalMap
-
-	// deep copy a map
-	deepCopy := make(map[string]string)
-	for k, v := range originalMap {
-		deepCopy[k] = v
-	}
-
-	fmt.Println("1: confMap %+v newMap %+v deepCopy %+v", originalMap, newMap, deepCopy)
-	newMap["two"] = "this is changed"
-	fmt.Println("2: confMap %+v newMap %+v deepCopy %+v", originalMap, newMap, deepCopy)
-
-	source := []int{1, 2, 3, 4, 5}
-	destination := make([]int, len(source))
-	copy(destination, source)
-	source = append(source, 6, 7)
-	destination = destination[1:]
-	fmt.Println("1: source %s", source)
-	fmt.Println("1: destination %s", destination)
-
 	// connect influxDB create Influx client return batchpoint
 	tand_host := "localhost"
 	tand_port := "8086"
@@ -48,8 +23,9 @@ func main() {
 	fmt.Printf("Client create with BP %+v\n", batchPoint)
 
 	// Create a point and add to batch
-	tags := map[string]string{"source": "nodeA"}
+	tags := map[string]string{}
 	fields := map[string]interface{}{
+		"source":       "nodeX",
 		"admin-status": "UP",
 		"oper-status":  "DOWN",
 	}
@@ -73,7 +49,7 @@ func main() {
 // create InfluxDB v1.8 client
 func InfluxdbClient(tand_host string, tand_port string) client.Client {
 	url := "http://" + tand_host + ":" + tand_port
-	config := client.HTTPConfig{Addr: url, InsecureSkipVerify: true}
+	config := client.HTTPConfig{Addr: url}
 	// create client
 	/*c, err := client.NewHTTPClient(client.HTTPConfig{
 		Addr: url,
