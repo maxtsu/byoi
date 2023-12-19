@@ -37,6 +37,7 @@ func main() {
 		)
 		//Write point to the writeAPI
 		writeAPI.WritePoint(p)
+		fmt.Printf("Write points: %+v\n", p)
 		time.Sleep(4 * time.Second)
 	}
 
