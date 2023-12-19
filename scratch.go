@@ -6,7 +6,7 @@ import (
 
 	"github.com/gologme/log"
 	client "github.com/influxdata/influxdb1-client/v2"
-) //test with different 'client'
+)
 
 // main function
 func main() {
@@ -73,10 +73,12 @@ func main() {
 // create InfluxDB v1.8 client
 func InfluxdbClient(tand_host string, tand_port string) client.Client {
 	url := "https://" + tand_host + ":" + tand_port
+	config := client.HTTPConfig{Addr: url, InsecureSkipVerify: true}
 	// create client
-	c, err := client.NewHTTPClient(client.HTTPConfig{
+	/*c, err := client.NewHTTPClient(client.HTTPConfig{
 		Addr: url,
-	})
+	})*/
+	c, err := client.NewHTTPClient(config)
 	if err != nil {
 		log.Errorf("Error creating InfluxDB Client: ", err)
 	}
