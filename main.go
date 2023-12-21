@@ -85,7 +85,9 @@ func main() {
 		databas := d.Database
 		wapi := influxClient.WriteAPI("my-org", databas)
 		fmt.Printf("wapi: %+v\n", wapi)
-		d.DeviceDetailsWriteAPI(influxClient)
+		d.WriteApi = wapi
+		fmt.Printf("d.WriteApi: %+v\n", d.WriteApi)
+		//d.DeviceDetailsWriteAPI(influxClient)
 	}
 
 	//fmt.Printf("\nPost-Device_details: %+v\n", device_details)
@@ -319,7 +321,7 @@ func InfluxdbClient(tand_host string, tand_port string) influxdb2.Client {
 	options.SetLogLevel(2) //0 error, 1 - warning, 2 - info, 3 - debug
 
 	// create client
-	url := "https://" + tand_host + ":" + tand_port
+	url := "http://" + tand_host + ":" + tand_port
 	c := influxdb2.NewClientWithOptions(url, "my-token", options)
 	defer c.Close()
 	log.Infof("Created InfluxDB Client: %+v\n", c)

@@ -164,7 +164,7 @@ type Device_Details struct {
 	WriteApi    api.WriteAPI
 }
 
-// Function to add Influx client writeAPI to device details usinf database
+// Function to add Influx client writeAPI to device details using database
 func (d *Device_Details) DeviceDetailsWriteAPI(c influxdb2.Client) error {
 	if d.WriteApi != nil {
 		d.WriteApi = c.WriteAPI("my-org", d.Database)

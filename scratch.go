@@ -46,7 +46,9 @@ func main() {
 		databas := d.Database
 		wapi := influxClient.WriteAPI("my-org", databas)
 		fmt.Printf("wapi: %+v\n", wapi)
-		d.DeviceDetailsWriteAPI(influxClient)
+		d.WriteApi = wapi
+		fmt.Printf("d.WriteApi: %+v\n", d.WriteApi)
+		//d.DeviceDetailsWriteAPI(influxClient)
 	}
 
 	//writeAPI := WriteApi(database, tandClient)
