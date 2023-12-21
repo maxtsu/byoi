@@ -6,7 +6,6 @@ WORKDIR /
 
 COPY gnfingest/. gnfingest/.
 COPY main.go .
-#COPY vendor .
 COPY go.mod .
 COPY go.sum .
 
@@ -16,6 +15,4 @@ RUN GOOS=linux GOARCH=amd64 go build -o app -tags musl
 FROM alpine:latest as runner
 WORKDIR /root/
 COPY --from=builder app .
-COPY rules.json .
-COPY config.json .
-COPY jfit_reconfigure.sh .
+COPY rules.json jfit_reconfigure.sh ./

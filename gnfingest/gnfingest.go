@@ -2,12 +2,14 @@ package gnfingest
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"strings"
 
-	"github.com/gologme/log"
+	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
+	"github.com/influxdata/influxdb-client-go/v2/api"
 )
 
 // gnmic Event Message partial struct
@@ -125,15 +127,15 @@ type KVS struct {
 }
 
 // Function to return list/slice of device details from config.json
-func (c *Configjson) DeviceDetails(keys []string) []Device_Key {
+func (c *Configjson) DeviceDetails(keys []string) []Device_Details {
 	// create slice of devices
-	device_keys := []Device_Key{}
+	device_details := []Device_Details{}
 	for _, d := range c.Hbin.Inputs[0].Plugin.Config.Device {
 		//extract list/slice of structs for sensors
 		//d.MapKVS() //Create map for KVS items
 		// Iterate over array of sensors
 		for _, s := range d.Sensor {
-			var dev Device_Key
+			var dev Device_Details
 			dev.DeviceName = d.SystemID
 			dev.Database = d.HealthbotStorage.Database
 			dev.Measurement = s.Measurement
@@ -142,23 +144,34 @@ func (c *Configjson) DeviceDetails(keys []string) []Device_Key {
 			dev.KVS_path = kvs_pairs["path"]
 			dev.KVS_rule_id = kvs_pairs["rule-id"]
 			dev.KVS_prefix = kvs_pairs["prefix"]
-			device_keys = append(device_keys, dev)
+			device_details = append(device_details, dev)
 		}
 	}
-	return device_keys
+	return device_details
 }
 
 // struct defining sensor/rule for each device
 //
 // -device name -kvs path -kvs rule-id
 // -kvs prefix -measurement -database
-type Device_Key struct {
+type Device_Details struct {
 	DeviceName  string
 	KVS_path    string
 	KVS_rule_id string
 	KVS_prefix  string
 	Measurement string
 	Database    string
+	WriteApi    api.WriteAPI
+}
+
+// Function to add Influx client writeAPI to device details usinf database
+func (d *Device_Details) DeviceDetailsWriteAPI(c influxdb2.Client) error {
+	if d.WriteApi != nil {
+		d.WriteApi = c.WriteAPI("my-org", d.Database)
+		return nil
+	} else {
+		return errors.New("empty name")
+	}
 }
 
 // Function to read text file return byteResult
@@ -193,11 +206,6 @@ func KVS_parsing(keys []KVS, keyString []string) map[string]string {
 	return results //return map of key-values
 }
 
-// Function to write data package to TSDB
-func WriteTSDB(data map[string]string) {
-	log.Infof("write TSDB: %+v\n", data)
-}
-
 // Struct define a rule in rules.json
 type RulesJSON struct {
 	Comment     string   `json:"comment"`
@@ -206,11 +214,4 @@ type RulesJSON struct {
 	Prefix      string   `json:"prefix"`
 	IndexValues []string `json:"index_values"`
 	Fields      []string `json:"fields"`
-}
-
-// Influx client for a device
-type InfluxClient struct {
-	Device   string
-	Source   string
-	Database string
 }

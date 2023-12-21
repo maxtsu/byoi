@@ -1,6 +1,8 @@
 package main
 
 import (
+	"byoi/gnfingest"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -15,12 +17,39 @@ func main() {
 	tand_port := "8086"
 	database := "hb-default:cisco:cisco-B"
 	measurement := "external/bt-kafka/cisco_resources/byoi"
+
+	var configfile = "config.json"
+	//convert the config.json to a struct
+	byteResult := gnfingest.ReadFile(configfile)
+	var configjson gnfingest.Configjson
+	err := json.Unmarshal(byteResult, &configjson)
+	if err != nil {
+		fmt.Println("config.json Unmarshall error", err)
+	}
+	// config.json list of device key from values under sensor for searching messages
+	keys := []string{"path", "rule-id", "prefix"} //list of keys/parameters to extract from the KVS section
+	device_details := configjson.DeviceDetails(keys)
+
 	//Create client
 	tandClient := InfluxdbClient(tand_host, tand_port)
 	fmt.Printf("Client create with client %+v\n", tandClient)
 
+	//Create InfluxDB client
+	influxClient := InfluxdbClientx(tand_host, tand_port)
+	log.Infof("Client create with client %+v\n", influxClient)
+	fmt.Printf("\n\nCliewnt: %+v\n", influxClient)
+	// Create Influx writeAPI for each database (source) from device_details list
+	for _, d := range device_details {
+		databas := d.Database
+		wapi := influxClient.WriteAPI("my-org", databas)
+		fmt.Printf("wapi: %+v\n", wapi)
+		d.DeviceDetailsWriteAPI(influxClient)
+	}
+
 	//writeAPI := WriteApi(database, tandClient)
 	writeAPI := tandClient.WriteAPI("my-org", database)
+
+	fmt.Printf("Type of %v is %T", writeAPI, writeAPI)
 
 	for i := 11; i < 20; i++ {
 		// Create a point
@@ -47,21 +76,33 @@ func main() {
 	tandClient.Close()
 }
 
-func InfluxdbClient(tand_host string, tand_port string) influxdb2.Client {
-	url := "http://" + tand_host + ":" + tand_port
-	//config := client.HTTPConfig{Addr: url}
-	//c, err := client.NewHTTPClient(config)
-	// create client
-	/*	c, err := client.NewHTTPClient(client.HTTPConfig{
-		Addr: url,
-	}) */
+// create InfluxDB client
+func InfluxdbClientx(tand_host string, tand_port string) influxdb2.Client {
+	// set options for influx client
 	options := influxdb2.DefaultOptions()
-	options.SetBatchSize(5)
-	options.SetFlushInterval(10000)
+	options.SetBatchSize(uint(batchSize))
+	options.SetFlushInterval(uint(flushInterval))
 	options.SetLogLevel(2) //0 error, 1 - warning, 2 - info, 3 - debug
 
+	// create client
+	url := "https://" + tand_host + ":" + tand_port
 	c := influxdb2.NewClientWithOptions(url, "my-token", options)
 	defer c.Close()
 	log.Infof("Created InfluxDB Client: %+v\n", c)
-	return c //return the client
+	return c //return the influx client
+}
+
+// Create the point with data for writing
+func WritePointx(fields map[string]interface{}, msg *gnfingest.Message, dev *gnfingest.Device_Details) {
+	tags := map[string]string{}
+	time := time.Unix(msg.Timestamp, 0)
+	p := influxdb2.NewPoint(dev.Measurement, tags, fields, time)
+	fmt.Printf("Point: %+v\n", p)
+	if dev.WriteApi != nil {
+		//Write point to the writeAPI
+		dev.WriteApi.WritePoint(p)
+		log.Debugf("Write data point: %+v\n", p)
+	} else {
+		log.Errorf("WriteApi for: %+v <nil>\n", dev.DeviceName)
+	}
 }
