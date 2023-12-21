@@ -88,7 +88,7 @@ func InfluxdbClientx(tand_host string, tand_port string) influxdb2.Client {
 	options.SetLogLevel(2) //0 error, 1 - warning, 2 - info, 3 - debug
 
 	// create client
-	url := "https://" + tand_host + ":" + tand_port
+	url := "http://" + tand_host + ":" + tand_port
 	c := influxdb2.NewClientWithOptions(url, "my-token", options)
 	defer c.Close()
 	log.Infof("Created InfluxDB Client: %+v\n", c)
