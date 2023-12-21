@@ -10,6 +10,9 @@ import (
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 )
 
+var batchSize = 10       // Influx write batch size
+var flushInterval = 2000 // Influx write flush intervale
+
 // main function
 func main() {
 	// connect influxDB create Influx client return batchpoint
@@ -31,7 +34,7 @@ func main() {
 	device_details := configjson.DeviceDetails(keys)
 
 	//Create client
-	tandClient := InfluxdbClient(tand_host, tand_port)
+	tandClient := InfluxdbClientx(tand_host, tand_port)
 	fmt.Printf("Client create with client %+v\n", tandClient)
 
 	//Create InfluxDB client
