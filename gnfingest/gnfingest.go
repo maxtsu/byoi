@@ -226,10 +226,10 @@ func InfluxdbClient(tand_host string, tand_port string, batchSize int, flushInte
 
 // Create Influx writeAPI for each database (source) from device_details list
 func InfluxClientWriteAPIs(c influxdb2.Client, device_details map[string]Device_Details) {
-	for _, d := range device_details {
+	for name, d := range device_details {
 		writeapi := c.WriteAPI("my-org", d.Database)
 		d.WriteApi = writeapi
 		fmt.Printf("d.WriteApi: %+v\n", d.WriteApi)
-		//device_details[i] = d //Update slice of Devices with the WriteAPI
+		device_details[name] = d //Update slice of Devices with the WriteAPI
 	}
 }
