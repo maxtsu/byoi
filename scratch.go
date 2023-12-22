@@ -56,7 +56,7 @@ func main() {
 
 	fmt.Printf("Type of %v is %T", writeAPI, writeAPI)
 
-	for i := 11; i < 20; i++ {
+	for i := 1; i < 3; i++ {
 		// Create a point
 		tags := map[string]string{}
 		fields := map[string]interface{}{

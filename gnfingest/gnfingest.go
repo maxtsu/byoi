@@ -2,13 +2,11 @@ package gnfingest
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"os"
 	"strings"
 
-	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	"github.com/influxdata/influxdb-client-go/v2/api"
 )
 
@@ -162,16 +160,6 @@ type Device_Details struct {
 	Measurement string
 	Database    string
 	WriteApi    api.WriteAPI
-}
-
-// Function to add Influx client writeAPI to device details using database
-func (d *Device_Details) DeviceDetailsWriteAPI(c influxdb2.Client) error {
-	if d.WriteApi != nil {
-		d.WriteApi = c.WriteAPI("my-org", d.Database)
-		return nil
-	} else {
-		return errors.New("empty name")
-	}
 }
 
 // Function to read text file return byteResult
