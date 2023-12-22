@@ -127,10 +127,9 @@ type KVS struct {
 }
 
 // Function to return list/slice of device details from config.json
-func (c *Configjson) DeviceDetails(keys []string) ([]Device_Details, map[string]Device_Details) {
-	// create slice of devices
-	device_details := []Device_Details{}
-	var map_device_details = make(map[string]Device_Details)
+func (c *Configjson) DeviceDetails(keys []string) map[string]Device_Details {
+	// create map of devices
+	var device_details = make(map[string]Device_Details)
 	for _, d := range c.Hbin.Inputs[0].Plugin.Config.Device {
 		//extract list/slice of structs for sensors
 		//d.MapKVS() //Create map for KVS items
@@ -145,12 +144,10 @@ func (c *Configjson) DeviceDetails(keys []string) ([]Device_Details, map[string]
 			dev.KVS_path = kvs_pairs["path"]
 			dev.KVS_rule_id = kvs_pairs["rule-id"]
 			dev.KVS_prefix = kvs_pairs["prefix"]
-			device_details = append(device_details, dev)
-
-			map_device_details[dev.DeviceName] = dev
+			device_details[dev.DeviceName] = dev
 		}
 	}
-	return device_details, map_device_details
+	return device_details
 }
 
 // struct defining sensor/rule for each device
