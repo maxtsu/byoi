@@ -145,6 +145,7 @@ func (c *Configjson) DeviceDetails(keys []string) map[string]Device_Details {
 			dev.KVS_rule_id = kvs_pairs["rule-id"]
 			dev.KVS_prefix = kvs_pairs["prefix"]
 			device_details[dev.DeviceName] = dev
+			fmt.Printf("DEVs: %+v\n", dev)
 		}
 	}
 	return device_details
@@ -161,6 +162,23 @@ type Device_Details struct {
 	KVS_prefix  string
 	Measurement string
 	Database    string
+	SystemID    string
+	WriteApi    api.WriteAPI
+}
+
+type Device_DetailsX struct {
+	DeviceName string
+	Database   string
+	SystemID   string
+	Sensor     Sensor
+}
+
+// struct defining sensor/rule for each device
+type Sensor struct {
+	KVS_path    string
+	KVS_rule_id string
+	KVS_prefix  string
+	Measurement string
 	WriteApi    api.WriteAPI
 }
 
