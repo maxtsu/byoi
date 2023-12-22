@@ -35,13 +35,12 @@ func main() {
 	new_device_details := configjson.DeviceDetailsX(keys)
 	fmt.Printf("New Device Details: %+v\n", new_device_details)
 
-	fmt.Printf("old_dd %+v\n", device_details)
-
 	//Create InfluxDB client
 	influxClient := gnfingest.InfluxdbClient(tand_host, tand_port, batchSize, flushInterval)
 	log.Infof("Client create with client %+v\n", influxClient)
 	fmt.Printf("Client: %+v\n", influxClient)
-	gnfingest.InfluxClientWriteAPIs(influxClient, device_details)
+	//gnfingest.InfluxClientWriteAPIs(influxClient, device_details)
+	gnfingest.InfluxClientWriteAPIsX(influxClient, new_device_details)
 
 	fmt.Printf("map_dd %+v\n", device_details)
 
