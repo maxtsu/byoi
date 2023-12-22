@@ -41,21 +41,21 @@ func main() {
 	influxClient := InfluxdbClientx(tand_host, tand_port)
 	log.Infof("Client create with client %+v\n", influxClient)
 	fmt.Printf("Client: %+v\n", influxClient)
+
 	// Create Influx writeAPI for each database (source) from device_details list
 	for _, d := range device_details {
 		databas := d.Database
 		wapi := influxClient.WriteAPI("my-org", databas)
 		fmt.Printf("wapi: %+v\n", wapi)
 		d.WriteApi = wapi
-		time.Sleep(4 * time.Second)
-
+		d.Test = d.DeviceName
 		fmt.Printf("d.WriteApi: %+v\n", d.WriteApi)
-		//d.DeviceDetailsWriteAPI(influxClient)
 	}
 
 	for _, d := range device_details {
 		fmt.Printf("Printing the wrtieapi again\n")
 		fmt.Printf("d.WriteApi: %+v\n", d.WriteApi)
+		fmt.Printf("d.Test: %+v\n", d.Test)
 	}
 
 	//writeAPI := WriteApi(database, tandClient)
