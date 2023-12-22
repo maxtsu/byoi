@@ -50,10 +50,10 @@ func main() {
 		d.WriteApi = wapi
 		d.Test = d.DeviceName
 		fmt.Printf("d.WriteApi: %+v\n", d.WriteApi)
+		fmt.Printf("d.Test: %+v\n", d.Test)
 	}
-
+	fmt.Printf("\nPrinting the wrtieapi again\n")
 	for _, d := range device_details {
-		fmt.Printf("Printing the wrtieapi again\n")
 		fmt.Printf("d.WriteApi: %+v\n", d.WriteApi)
 		fmt.Printf("d.Test: %+v\n", d.Test)
 	}
