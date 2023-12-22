@@ -151,6 +151,36 @@ func (c *Configjson) DeviceDetails(keys []string) map[string]Device_Details {
 	return device_details
 }
 
+// Function to return list/slice of device details from config.json
+func (c *Configjson) DeviceDetailsX(keys []string) map[string]Device_DetailsX {
+	// create map of devices
+	var device_details = make(map[string]Device_DetailsX)
+	for _, d := range c.Hbin.Inputs[0].Plugin.Config.Device {
+		var dev Device_DetailsX
+		dev.DeviceName = d.Name
+		dev.SystemID = d.SystemID
+		dev.Database = d.HealthbotStorage.Database
+		var sensors = map[string]Sensor{}
+		//extract list/slice of structs for sensors
+		//d.MapKVS() //Create map for KVS items
+		// Iterate over array of sensors
+		for _, s := range d.Sensor {
+			var sensor Sensor
+			sensor.Measurement = s.Measurement
+			kvs_pairs := KVS_parsing(s.KVS, keys)
+			// Parameters from config.json {path}
+			sensor.KVS_path = kvs_pairs["path"]
+			sensor.KVS_rule_id = kvs_pairs["rule-id"]
+			sensor.KVS_prefix = kvs_pairs["prefix"]
+			sensors[sensor.KVS_path] = sensor //Map index is path
+			fmt.Printf("Sensor: %+v\n", sensor)
+		}
+		dev.Sensor = sensors
+		fmt.Printf("DEV: %+v\n", dev)
+	}
+	return device_details
+}
+
 // struct defining sensor/rule for each device
 //
 // -device name -kvs path -kvs rule-id
@@ -170,7 +200,7 @@ type Device_DetailsX struct {
 	DeviceName string
 	Database   string
 	SystemID   string
-	Sensor     Sensor
+	Sensor     map[string]Sensor //key for map is pKVS_path
 }
 
 // struct defining sensor/rule for each device

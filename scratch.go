@@ -32,6 +32,8 @@ func main() {
 	// config.json list of device key from values under sensor for searching messages
 	keys := []string{"path", "rule-id", "prefix"} //list of keys/parameters to extract from the KVS section
 	device_details := configjson.DeviceDetails(keys)
+	new_device_details := configjson.DeviceDetailsX(keys)
+	fmt.Printf("New Device Details: %+v\n", new_device_details)
 
 	fmt.Printf("\nmap_dd %+v\n", device_details)
 
