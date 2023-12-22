@@ -43,7 +43,7 @@ func main() {
 	for _, d := range device_details {
 		fmt.Printf("d.WriteApi: %+v\n", d.WriteApi)
 	}
-
+	fmt.Printf("Database \n", database)
 	for i := 1; i < 3; i++ {
 		// Create a point
 		tags := map[string]string{}
