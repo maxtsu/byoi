@@ -40,7 +40,7 @@ func main() {
 	gnfingest.InfluxClientWriteAPIs(influxClient, map_device_details)
 
 	fmt.Printf("\nPrinting the wrtieapi again\n")
-	for _, d := range device_details {
+	for _, d := range map_device_details {
 		fmt.Printf("d.WriteApi: %+v\n", d.WriteApi)
 	}
 	fmt.Printf("Database \n", database)
