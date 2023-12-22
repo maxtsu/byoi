@@ -77,7 +77,7 @@ func main() {
 	fmt.Printf("\nPre-Device_details: %+v\n", device_details)
 
 	//Create InfluxDB client
-	influxClient := InfluxdbClient(tand_host, tand_port)
+	influxClient := gnfingest.InfluxdbClient(tand_host, tand_port, batchSize, flushInterval)
 	log.Infof("Client create with client %+v\n", influxClient)
 	fmt.Printf("\n\nCliewnt: %+v\n", influxClient)
 	// Create Influx writeAPI for each database (source) from device_details list
@@ -313,7 +313,7 @@ func hometest(device_keys []gnfingest.Device_Details) {
 }
 
 // create InfluxDB client
-func InfluxdbClient(tand_host string, tand_port string) influxdb2.Client {
+func InfluxdbClienty(tand_host string, tand_port string) influxdb2.Client {
 	// set options for influx client
 	options := influxdb2.DefaultOptions()
 	options.SetBatchSize(uint(batchSize))

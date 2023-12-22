@@ -38,7 +38,8 @@ func main() {
 	fmt.Printf("Client create with client %+v\n", tandClient)
 
 	//Create InfluxDB client
-	influxClient := InfluxdbClientx(tand_host, tand_port)
+	//influxClient := InfluxdbClientx(tand_host, tand_port)
+	influxClient := gnfingest.InfluxdbClient(tand_host, tand_port, batchSize, flushInterval)
 	log.Infof("Client create with client %+v\n", influxClient)
 	fmt.Printf("Client: %+v\n", influxClient)
 

@@ -7,6 +7,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/gologme/log"
+	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	"github.com/influxdata/influxdb-client-go/v2/api"
 )
 
@@ -202,4 +204,19 @@ type RulesJSON struct {
 	Prefix      string   `json:"prefix"`
 	IndexValues []string `json:"index_values"`
 	Fields      []string `json:"fields"`
+}
+
+// create InfluxDB client
+func InfluxdbClient(tand_host string, tand_port string, batchSize int, flushInterval int) influxdb2.Client {
+	// set options for influx client
+	options := influxdb2.DefaultOptions()
+	options.SetBatchSize(uint(batchSize))
+	options.SetFlushInterval(uint(flushInterval))
+	options.SetLogLevel(2) //0 error, 1 - warning, 2 - info, 3 - debug
+	// create client
+	url := "http://" + tand_host + ":" + tand_port
+	c := influxdb2.NewClientWithOptions(url, "my-token", options)
+	defer c.Close()
+	log.Infof("Created InfluxDB Client: %+v\n", c)
+	return c //return the influx client
 }
