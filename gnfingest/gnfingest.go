@@ -127,9 +127,10 @@ type KVS struct {
 }
 
 // Function to return list/slice of device details from config.json
-func (c *Configjson) DeviceDetails(keys []string) []Device_Details {
+func (c *Configjson) DeviceDetails(keys []string) ([]Device_Details, map[string]Device_Details) {
 	// create slice of devices
 	device_details := []Device_Details{}
+	var map_device_details = make(map[string]Device_Details)
 	for _, d := range c.Hbin.Inputs[0].Plugin.Config.Device {
 		//extract list/slice of structs for sensors
 		//d.MapKVS() //Create map for KVS items
@@ -145,9 +146,11 @@ func (c *Configjson) DeviceDetails(keys []string) []Device_Details {
 			dev.KVS_rule_id = kvs_pairs["rule-id"]
 			dev.KVS_prefix = kvs_pairs["prefix"]
 			device_details = append(device_details, dev)
+
+			map_device_details[dev.DeviceName] = dev
 		}
 	}
-	return device_details
+	return device_details, map_device_details
 }
 
 // struct defining sensor/rule for each device
@@ -219,4 +222,14 @@ func InfluxdbClient(tand_host string, tand_port string, batchSize int, flushInte
 	defer c.Close()
 	log.Infof("Created InfluxDB Client: %+v\n", c)
 	return c //return the influx client
+}
+
+// Create Influx writeAPI for each database (source) from device_details list
+func InfluxClientWriteAPIs(c influxdb2.Client, device_details map[string]Device_Details) {
+	for _, d := range device_details {
+		writeapi := c.WriteAPI("my-org", d.Database)
+		d.WriteApi = writeapi
+		fmt.Printf("d.WriteApi: %+v\n", d.WriteApi)
+		//device_details[i] = d //Update slice of Devices with the WriteAPI
+	}
 }

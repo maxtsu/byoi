@@ -72,23 +72,15 @@ func main() {
 
 	// config.json list of device key from values under sensor for searching messages
 	keys := []string{"path", "rule-id", "prefix"} //list of keys/parameters to extract from the KVS section
-	device_details := configjson.DeviceDetails(keys)
+	device_details, map_device_details := configjson.DeviceDetails(keys)
 
-	fmt.Printf("\nPre-Device_details: %+v\n", device_details)
+	fmt.Printf("\nPre-Device_details: %+v\n", map_device_details)
 
 	//Create InfluxDB client
 	influxClient := gnfingest.InfluxdbClient(tand_host, tand_port, batchSize, flushInterval)
 	log.Infof("Client create with client %+v\n", influxClient)
-	fmt.Printf("\n\nCliewnt: %+v\n", influxClient)
-	// Create Influx writeAPI for each database (source) from device_details list
-	for _, d := range device_details {
-		databas := d.Database
-		wapi := influxClient.WriteAPI("my-org", databas)
-		fmt.Printf("wapi: %+v\n", wapi)
-		d.WriteApi = wapi
-		fmt.Printf("d.WriteApi: %+v\n", d.WriteApi)
-		//d.DeviceDetailsWriteAPI(influxClient)
-	}
+	// Create WriteAPI endpoint for each device
+	gnfingest.InfluxClientWriteAPIs(influxClient, map_device_details)
 
 	//fmt.Printf("\nPost-Device_details: %+v\n", device_details)
 
@@ -310,32 +302,6 @@ func hometest(device_keys []gnfingest.Device_Details) {
 	// processs message just like a kafka message
 	ProcessKafkaMessage(byteResult, device_keys)
 
-}
-
-// create InfluxDB client
-func InfluxdbClienty(tand_host string, tand_port string) influxdb2.Client {
-	// set options for influx client
-	options := influxdb2.DefaultOptions()
-	options.SetBatchSize(uint(batchSize))
-	options.SetFlushInterval(uint(flushInterval))
-	options.SetLogLevel(2) //0 error, 1 - warning, 2 - info, 3 - debug
-
-	// create client
-	url := "http://" + tand_host + ":" + tand_port
-	c := influxdb2.NewClientWithOptions(url, "my-token", options)
-	defer c.Close()
-	log.Infof("Created InfluxDB Client: %+v\n", c)
-	return c //return the influx client
-}
-
-// Create Influx writeAPI for each database (source) from device_details list
-func InfluxClientWriteAPIs(c influxdb2.Client, device_details []gnfingest.Device_Details) {
-	for i, d := range device_details {
-		writeapi := c.WriteAPI("my-org", d.Database)
-		d.WriteApi = writeapi
-		fmt.Printf("d.WriteApi: %+v\n", d.WriteApi)
-		device_details[i] = d
-	}
 }
 
 // Create the point with data for writing
