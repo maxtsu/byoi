@@ -145,7 +145,6 @@ func (c *Configjson) DeviceDetails(keys []string) map[string]Device_Details {
 			dev.KVS_rule_id = kvs_pairs["rule-id"]
 			dev.KVS_prefix = kvs_pairs["prefix"]
 			device_details[dev.DeviceName] = dev
-			fmt.Printf("DEVs: %+v\n", dev)
 		}
 	}
 	return device_details
@@ -153,7 +152,7 @@ func (c *Configjson) DeviceDetails(keys []string) map[string]Device_Details {
 
 // Function to return list/slice of device details from config.json
 func (c *Configjson) DeviceDetailsX(keys []string) map[string]Device_DetailsX {
-	// create map of devices
+	// create map of devices key is DeviceName
 	var device_details = make(map[string]Device_DetailsX)
 	for _, d := range c.Hbin.Inputs[0].Plugin.Config.Device {
 		var dev Device_DetailsX
@@ -176,6 +175,7 @@ func (c *Configjson) DeviceDetailsX(keys []string) map[string]Device_DetailsX {
 			fmt.Printf("Sensor: %+v\n", sensor)
 		}
 		dev.Sensor = sensors
+		device_details[dev.DeviceName] = dev
 		fmt.Printf("DEV: %+v\n", dev)
 	}
 	return device_details
