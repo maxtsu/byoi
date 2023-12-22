@@ -43,7 +43,7 @@ func main() {
 	fmt.Printf("Client: %+v\n", influxClient)
 
 	// Create Influx writeAPI for each database (source) from device_details list
-	for _, d := range device_details {
+	for i, d := range device_details {
 		databas := d.Database
 		wapi := influxClient.WriteAPI("my-org", databas)
 		fmt.Printf("wapi: %+v\n", wapi)
@@ -51,6 +51,7 @@ func main() {
 		d.Test = d.DeviceName
 		fmt.Printf("d.WriteApi: %+v\n", d.WriteApi)
 		fmt.Printf("d.Test: %+v\n", d.Test)
+		device_details[i] = d
 	}
 	fmt.Printf("\nPrinting the wrtieapi again\n")
 	for _, d := range device_details {
