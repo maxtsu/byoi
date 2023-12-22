@@ -160,7 +160,6 @@ type Device_Details struct {
 	Measurement string
 	Database    string
 	WriteApi    api.WriteAPI
-	Test        string
 }
 
 // Function to read text file return byteResult

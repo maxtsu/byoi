@@ -43,20 +43,11 @@ func main() {
 	fmt.Printf("Client: %+v\n", influxClient)
 
 	// Create Influx writeAPI for each database (source) from device_details list
-	for i, d := range device_details {
-		databas := d.Database
-		wapi := influxClient.WriteAPI("my-org", databas)
-		fmt.Printf("wapi: %+v\n", wapi)
-		d.WriteApi = wapi
-		d.Test = d.DeviceName
-		fmt.Printf("d.WriteApi: %+v\n", d.WriteApi)
-		fmt.Printf("d.Test: %+v\n", d.Test)
-		device_details[i] = d
-	}
+	InfluxClientWriteAPIsx(influxClient, device_details)
+
 	fmt.Printf("\nPrinting the wrtieapi again\n")
 	for _, d := range device_details {
 		fmt.Printf("d.WriteApi: %+v\n", d.WriteApi)
-		fmt.Printf("d.Test: %+v\n", d.Test)
 	}
 
 	//writeAPI := WriteApi(database, tandClient)
@@ -103,6 +94,16 @@ func InfluxdbClientx(tand_host string, tand_port string) influxdb2.Client {
 	defer c.Close()
 	log.Infof("Created InfluxDB Client: %+v\n", c)
 	return c //return the influx client
+}
+
+// Create Influx writeAPI for each database (source) from device_details list
+func InfluxClientWriteAPIsx(c influxdb2.Client, device_details []gnfingest.Device_Details) {
+	for i, d := range device_details {
+		writeapi := c.WriteAPI("my-org", d.Database)
+		d.WriteApi = writeapi
+		fmt.Printf("d.WriteApi: %+v\n", d.WriteApi)
+		device_details[i] = d
+	}
 }
 
 // Create the point with data for writing

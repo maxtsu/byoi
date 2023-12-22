@@ -328,6 +328,16 @@ func InfluxdbClient(tand_host string, tand_port string) influxdb2.Client {
 	return c //return the influx client
 }
 
+// Create Influx writeAPI for each database (source) from device_details list
+func InfluxClientWriteAPIs(c influxdb2.Client, device_details []gnfingest.Device_Details) {
+	for i, d := range device_details {
+		writeapi := c.WriteAPI("my-org", d.Database)
+		d.WriteApi = writeapi
+		fmt.Printf("d.WriteApi: %+v\n", d.WriteApi)
+		device_details[i] = d
+	}
+}
+
 // Create the point with data for writing
 func WritePoint(fields map[string]interface{}, msg *gnfingest.Message, dev *gnfingest.Device_Details) {
 	tags := map[string]string{}
