@@ -227,7 +227,7 @@ func InfluxdbClient(tand_host string, tand_port string, batchSize int, flushInte
 	options := influxdb2.DefaultOptions()
 	options.SetBatchSize(uint(batchSize))
 	options.SetFlushInterval(uint(flushInterval))
-	options.SetLogLevel(2) //0 error, 1 - warning, 2 - info, 3 - debug
+	options.SetLogLevel(3) //0 error, 1 - warning, 2 - info, 3 - debug
 	// create client
 	url := "http://" + tand_host + ":" + tand_port
 	c := influxdb2.NewClientWithOptions(url, "my-token", options)
