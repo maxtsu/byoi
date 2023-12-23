@@ -127,31 +127,7 @@ type KVS struct {
 }
 
 // Function to return list/slice of device details from config.json
-func (c *Configjson) DeviceDetails(keys []string) map[string]Device_Details {
-	// create map of devices
-	var device_details = make(map[string]Device_Details)
-	for _, d := range c.Hbin.Inputs[0].Plugin.Config.Device {
-		//extract list/slice of structs for sensors
-		//d.MapKVS() //Create map for KVS items
-		// Iterate over array of sensors
-		for _, s := range d.Sensor {
-			var dev Device_Details
-			dev.DeviceName = d.SystemID
-			dev.Database = d.HealthbotStorage.Database
-			dev.Measurement = s.Measurement
-			kvs_pairs := KVS_parsing(s.KVS, keys)
-			// Parameters from config.json {path}
-			dev.KVS_path = kvs_pairs["path"]
-			dev.KVS_rule_id = kvs_pairs["rule-id"]
-			dev.KVS_prefix = kvs_pairs["prefix"]
-			device_details[dev.DeviceName] = dev
-		}
-	}
-	return device_details
-}
-
-// Function to return list/slice of device details from config.json
-func (c *Configjson) DeviceDetailsX(keys []string) map[string]Device_DetailsX {
+func (c *Configjson) DeviceDetails(keys []string) map[string]Device_DetailsX {
 	// create map of devices key is DeviceName
 	var device_details = make(map[string]Device_DetailsX)
 	for _, d := range c.Hbin.Inputs[0].Plugin.Config.Device {
@@ -270,17 +246,7 @@ func InfluxdbClient(tand_host string, tand_port string, batchSize int, flushInte
 }
 
 // Create Influx writeAPI for each database (source) from device_details list
-func InfluxClientWriteAPIs(c influxdb2.Client, device_details map[string]Device_Details) {
-	for name, d := range device_details {
-		writeapi := c.WriteAPI("my-org", d.Database)
-		d.WriteApi = writeapi
-		fmt.Printf("d.WriteApi: %+v\n", d.WriteApi)
-		device_details[name] = d //Update slice of Devices with the WriteAPI
-	}
-}
-
-// Create Influx writeAPI for each database (source) from device_details list
-func InfluxClientWriteAPIsX(c influxdb2.Client, device_details map[string]Device_DetailsX) {
+func InfluxClientWriteAPIs(c influxdb2.Client, device_details map[string]Device_DetailsX) {
 	for name, d := range device_details {
 		writeapi := c.WriteAPI("my-org", d.Database)
 		d.WriteApi = writeapi
