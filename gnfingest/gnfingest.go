@@ -127,11 +127,11 @@ type KVS struct {
 }
 
 // Function to return list/slice of device details from config.json
-func (c *Configjson) DeviceDetails(keys []string) map[string]Device_DetailsX {
+func (c *Configjson) DeviceDetails(keys []string) map[string]Device_Details {
 	// create map of devices key is DeviceName
-	var device_details = make(map[string]Device_DetailsX)
+	var device_details = make(map[string]Device_Details)
 	for _, d := range c.Hbin.Inputs[0].Plugin.Config.Device {
-		var dev Device_DetailsX
+		var dev Device_Details
 		dev.DeviceName = d.Name
 		dev.SystemID = d.SystemID
 		dev.Database = d.HealthbotStorage.Database
@@ -147,12 +147,14 @@ func (c *Configjson) DeviceDetails(keys []string) map[string]Device_DetailsX {
 			sensor.KVS_path = kvs_pairs["path"]
 			sensor.KVS_rule_id = kvs_pairs["rule-id"]
 			sensor.KVS_prefix = kvs_pairs["prefix"]
-			sensors[sensor.KVS_path] = sensor //Map index is path
+			//Sensor map index is concatenated prefix + path
+			map_key := sensor.KVS_prefix + sensor.KVS_path
+			sensors[map_key] = sensor
 			fmt.Printf("Sensor: %+v\n", sensor)
 		}
 		dev.Sensor = sensors
-		device_details[dev.DeviceName] = dev
-		fmt.Printf("DEV: %+v\n", dev)
+		//Device map key is SystemID for source searching
+		device_details[dev.SystemID] = dev
 	}
 	return device_details
 }
@@ -162,22 +164,11 @@ func (c *Configjson) DeviceDetails(keys []string) map[string]Device_DetailsX {
 // -device name -kvs path -kvs rule-id
 // -kvs prefix -measurement -database
 type Device_Details struct {
-	DeviceName  string
-	KVS_path    string
-	KVS_rule_id string
-	KVS_prefix  string
-	Measurement string
-	Database    string
-	SystemID    string
-	WriteApi    api.WriteAPI
-}
-
-type Device_DetailsX struct {
 	DeviceName string
 	Database   string
 	SystemID   string
 	WriteApi   api.WriteAPI
-	Sensor     map[string]Sensor //key for map is pKVS_path
+	Sensor     map[string]Sensor //key for map is KVS_path
 }
 
 // struct defining sensor/rule for each device
@@ -246,7 +237,7 @@ func InfluxdbClient(tand_host string, tand_port string, batchSize int, flushInte
 }
 
 // Create Influx writeAPI for each database (source) from device_details list
-func InfluxClientWriteAPIs(c influxdb2.Client, device_details map[string]Device_DetailsX) {
+func InfluxClientWriteAPIs(c influxdb2.Client, device_details map[string]Device_Details) {
 	for name, d := range device_details {
 		writeapi := c.WriteAPI("my-org", d.Database)
 		d.WriteApi = writeapi

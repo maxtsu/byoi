@@ -11,16 +11,16 @@ import (
 )
 
 var batchSize = 10       // Influx write batch size
-var flushInterval = 2000 // Influx write flush intervale
+var flushInterval = 2000 // Influx write flush interval
+
+var tand_host = "localhost"
+var tand_port = "8086"
+var database = "hb-default:cisco:cisco-B"
+var measurement = "external/bt-kafka/cisco_resources/byoi"
 
 // main function
 func main() {
 	// connect influxDB create Influx client return batchpoint
-	tand_host := "localhost"
-	tand_port := "8086"
-	database := "hb-default:cisco:cisco-B"
-	measurement := "external/bt-kafka/cisco_resources/byoi"
-
 	var configfile = "config.json"
 	//convert the config.json to a struct
 	byteResult := gnfingest.ReadFile(configfile)
@@ -37,14 +37,6 @@ func main() {
 	log.Infof("Client create with client %+v\n", influxClient)
 	fmt.Printf("Client: %+v\n", influxClient)
 	gnfingest.InfluxClientWriteAPIs(influxClient, device_details)
-
-	fmt.Printf("\nPrinting the wrtieapi again\n")
-	for _, d := range device_details {
-		fmt.Printf("d.WriteApi: %+v\n", d.WriteApi)
-	}
-	//printing again
-	fmt.Printf("Database %+v\n", database)
-	fmt.Printf("devceDD %+v\n", device_details)
 
 	for i := 1; i < 2; i++ {
 		// Create a point
@@ -76,7 +68,7 @@ func main() {
 func WritePointx(fields map[string]interface{}, msg *gnfingest.Message, dev *gnfingest.Device_Details) {
 	tags := map[string]string{}
 	time := time.Unix(msg.Timestamp, 0)
-	p := influxdb2.NewPoint(dev.Measurement, tags, fields, time)
+	p := influxdb2.NewPoint(measurement, tags, fields, time)
 	fmt.Printf("Point: %+v\n", p)
 	if dev.WriteApi != nil {
 		//Write point to the writeAPI

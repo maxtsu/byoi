@@ -73,8 +73,6 @@ func main() {
 	// config.json list of device key from values under sensor for searching messages
 	keys := []string{"path", "rule-id", "prefix"} //list of keys/parameters to extract from the KVS section
 	device_details := configjson.DeviceDetails(keys)
-	new_device_details := configjson.DeviceDetailsX(keys)
-	fmt.Printf("New Device Details: %+v\n", new_device_details)
 
 	fmt.Printf("\nPre-Device_details: %+v\n", device_details)
 
@@ -83,8 +81,6 @@ func main() {
 	log.Infof("Client create with client %+v\n", influxClient)
 	// Create WriteAPI endpoint for each device
 	gnfingest.InfluxClientWriteAPIs(influxClient, device_details)
-
-	//fmt.Printf("\nPost-Device_details: %+v\n", device_details)
 
 	// extract the brokers topics and configuration from the configjson KVS
 	kafkaCfg := gnfingest.KVS_parsing(configjson.Hbin.Inputs[0].Plugin.Config.KVS, []string{"brokers", "topics",
@@ -199,7 +195,7 @@ func safeSlice(slice string, length int) string {
 }
 
 // Process the raw kafka message pointer to message (we do not change it)
-func ProcessKafkaMessage(kafkaMessage []byte, devices_details []gnfingest.Device_Details) {
+func ProcessKafkaMessage(kafkaMessage []byte, devices_details map[string]gnfingest.Device_Details) {
 	// Kafka message convert to JSON struct
 	message := gnfingest.Message{}
 	err := json.Unmarshal([]byte(kafkaMessage), &message)
@@ -217,6 +213,16 @@ func ProcessKafkaMessage(kafkaMessage []byte, devices_details []gnfingest.Device
 		log.Debugf("Message Source: %s Prefix: %s Path: %s\n", messageSource, messagePrefix, messagePath)
 		messageMatchRule := false //Flag for match in message processing
 		//Start matching message to configured rules in config.json (device_keys)
+		/*m := map[string]float64{"pi": 3.14}
+		if v, found := m["pi"]; found {
+			fmt.Println(v)
+		} */
+		v, ok := devices_details[messageSource]
+		if ok {
+			fmt.Printf("the device matched is... %+v", v)
+		}
+
+		//original
 		for _, d := range devices_details {
 			// Match Source-Prefix-Path
 			if (d.DeviceName == messageSource) && (d.KVS_prefix == messagePrefix) && (d.KVS_path == messagePath) {
