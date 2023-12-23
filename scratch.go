@@ -41,7 +41,7 @@ func main() {
 
 	// Create a point
 	fields := map[string]interface{}{
-		"source":       "nodeX",
+		"source":       "nodeY",
 		"admin-status": "UP",
 		"oper-status":  "DOWN",
 		"bytes_sent":   "234234",
