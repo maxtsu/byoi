@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/gologme/log"
-	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 )
 
 var batchSize = 10       // Influx write batch size
@@ -49,9 +48,6 @@ func main() {
 		"bytes_sent":   "234234",
 	}
 
-	p := influxdb2.NewPoint(
-		measurement, tags, fields, time.Now(),
-	)
 	//Write point to the writeAPI
 	dev := device_details["10.213.94.44"]
 	sensor := device_details["10.213.94.44"].Sensor["openconfig-interfaces:/interfaces/interface/state/"]
