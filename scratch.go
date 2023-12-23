@@ -38,6 +38,8 @@ func main() {
 	fmt.Printf("Client: %+v\n", influxClient)
 	gnfingest.InfluxClientWriteAPIs(influxClient, device_details)
 
+	fmt.Printf("Device_details: %+v\n", device_details)
+
 	for i := 1; i < 2; i++ {
 		// Create a point
 		tags := map[string]string{}
