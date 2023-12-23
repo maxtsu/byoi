@@ -32,16 +32,11 @@ func main() {
 	// config.json list of device key from values under sensor for searching messages
 	keys := []string{"path", "rule-id", "prefix"} //list of keys/parameters to extract from the KVS section
 	device_details := configjson.DeviceDetails(keys)
-	fmt.Printf("Device Details: %+v\n", device_details)
-
 	//Create InfluxDB client
 	influxClient := gnfingest.InfluxdbClient(tand_host, tand_port, batchSize, flushInterval)
 	log.Infof("Client create with client %+v\n", influxClient)
 	fmt.Printf("Client: %+v\n", influxClient)
-	//gnfingest.InfluxClientWriteAPIs(influxClient, device_details)
 	gnfingest.InfluxClientWriteAPIs(influxClient, device_details)
-
-	fmt.Printf("map_dd %+v\n", device_details)
 
 	fmt.Printf("\nPrinting the wrtieapi again\n")
 	for _, d := range device_details {
@@ -51,7 +46,7 @@ func main() {
 	fmt.Printf("Database %+v\n", database)
 	fmt.Printf("devceDD %+v\n", device_details)
 
-	for i := 1; i < 3; i++ {
+	for i := 1; i < 2; i++ {
 		// Create a point
 		tags := map[string]string{}
 		fields := map[string]interface{}{
