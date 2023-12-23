@@ -46,7 +46,7 @@ func main() {
 		"source":       "nodeX",
 		"admin-status": "UP",
 		"oper-status":  "DOWN",
-		"bytes_sent":   i,
+		"bytes_sent":   "234234",
 	}
 
 	p := influxdb2.NewPoint(
