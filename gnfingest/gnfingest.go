@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/gologme/log"
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
@@ -150,7 +151,6 @@ func (c *Configjson) DeviceDetails(keys []string) map[string]Device_Details {
 			//Sensor map index is concatenated prefix + path
 			map_key := sensor.KVS_prefix + sensor.KVS_path
 			sensors[map_key] = sensor
-			fmt.Printf("Sensor: %+v\n", sensor)
 		}
 		dev.Sensor = sensors
 		//Device map key is SystemID for source searching
@@ -243,5 +243,19 @@ func InfluxClientWriteAPIs(c influxdb2.Client, device_details map[string]Device_
 		d.WriteApi = writeapi
 		fmt.Printf("d.WriteApi: %+v\n", d.WriteApi)
 		device_details[name] = d //Update slice of Devices with the WriteAPI
+	}
+}
+
+// Create the point with data for writing
+func WritePoint(fields map[string]interface{}, time time.Time, dev *Device_Details, sensor *Sensor) {
+	tags := map[string]string{}
+	p := influxdb2.NewPoint(sensor.Measurement, tags, fields, time)
+	fmt.Printf("Point: %+v\n", p)
+	if dev.WriteApi != nil {
+		//Write point to the writeAPI
+		dev.WriteApi.WritePoint(p)
+		log.Debugf("Write data point: %+v\n", p)
+	} else {
+		log.Errorf("WriteApi for: %+v <nil>\n", dev.DeviceName)
 	}
 }

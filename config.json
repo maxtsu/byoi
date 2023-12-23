@@ -18,7 +18,7 @@
                                         "kvs": [
                                             {
                                                 "key": "path",
-                                                "value": "interfaces/interface/state"
+                                                "value": "/interfaces/interface/state/"
                                             },
                                             {
                                                 "key": "rule-id",
@@ -70,7 +70,7 @@
                                         "kvs": [
                                             {
                                                 "key": "path",
-                                                "value": "interfaces/interface/state"
+                                                "value": "/interfaces/interface/state/"
                                             },
                                             {
                                                 "key": "rule-id",
@@ -88,7 +88,7 @@
                                         "kvs": [
                                             {
                                                 "key": "path",
-                                                "value": "interfaces/interface/state/counters"
+                                                "value": "/interfaces/interface/state/counters/"
                                             },
                                             {
                                                 "key": "rule-id",

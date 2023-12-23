@@ -12,7 +12,6 @@ import (
 
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/gologme/log"
-	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 )
 
 // Global Variables
@@ -74,14 +73,11 @@ func main() {
 	keys := []string{"path", "rule-id", "prefix"} //list of keys/parameters to extract from the KVS section
 	device_details := configjson.DeviceDetails(keys)
 
-	fmt.Printf("\nPre-Device_details: %+v\n", device_details)
-
 	//Create InfluxDB client
 	influxClient := gnfingest.InfluxdbClient(tand_host, tand_port, batchSize, flushInterval)
 	log.Infof("Client create with client %+v\n", influxClient)
 	// Create WriteAPI endpoint for each device
 	gnfingest.InfluxClientWriteAPIs(influxClient, device_details)
-
 	// extract the brokers topics and configuration from the configjson KVS
 	kafkaCfg := gnfingest.KVS_parsing(configjson.Hbin.Inputs[0].Plugin.Config.KVS, []string{"brokers", "topics",
 		"saslusername", "saslpassword", "saslmechanism", "securityprotocol"})
@@ -124,13 +120,10 @@ func main() {
 	if err != nil {
 		log.Error("rules.json Unmarshall error ", err)
 	}
-	// create map of structs key=rule-id
-	//var rules = make(map[string]gnfingest.RulesJSON)
+	// create map of structs key=rule-id using global Rules variable
 	for _, r := range r1 {
 		Rules[r.RuleID] = r
 	}
-	fmt.Printf("Rules from rules.json: %+v", Rules)
-
 	//run := true
 	run := false // for hometest
 	for run {
@@ -184,6 +177,9 @@ func main() {
 	}
 	// Run sample files in home lab
 	hometest(device_details) //call hometest function
+
+	// Ensures background processes finishes
+	influxClient.Close()
 }
 
 // Function to safely slice a string
@@ -210,32 +206,22 @@ func ProcessKafkaMessage(kafkaMessage []byte, devices_details map[string]gnfinge
 		messageSource := message.MessageSource()
 		messagePrefix := message.Tags.Prefix
 		messagePath := message.Tags.Path
+		messagePrefixPath := messagePrefix + messagePath
 		log.Debugf("Message Source: %s Prefix: %s Path: %s\n", messageSource, messagePrefix, messagePath)
 		messageMatchRule := false //Flag for match in message processing
 		//Start matching message to configured rules in config.json (device_keys)
-		/*m := map[string]float64{"pi": 3.14}
-		if v, found := m["pi"]; found {
-			fmt.Println(v)
-		} */
-		v, ok := devices_details[messageSource]
-		if ok {
-			fmt.Printf("the device matched is... %+v", v)
-		}
-
-		//original
-		for _, d := range devices_details {
-			// Match Source-Prefix-Path
-			if (d.DeviceName == messageSource) && (d.KVS_prefix == messagePrefix) && (d.KVS_path == messagePath) {
-				messageMatchRule = true //flag message has matched a device in (device_keys) config.json
-
-				//Rule-id for processing
-				//rule_id := d.KVS_rule_id
-				//log.Infof("Processing rule Rule-ID: %s Device: %s\n", rule_id, d.DeviceName)
-				//rule := rules[rule_id] // extract the rule in rules.json
-				//log.Infof("Process rule-id %s\n", rule.RuleID)
-
-				ProcessJsonMessage(&message, kafkaMessage, &d)
+		d, ok1 := devices_details[messageSource]
+		if ok1 {
+			fmt.Printf("Device matched is... %+v\n", d)
+			s, ok2 := d.Sensor[messagePrefixPath]
+			if ok2 {
+				fmt.Printf("Sensor is... %+v\n", s)
+				messageMatchRule = true  //flag message has matched a device in config.json
+				rule_id := s.KVS_rule_id //Rule-id for processing
+				log.Infof("Processing rule Rule-ID: %s Name: %s SystemID: %s\n", rule_id, d.DeviceName, d.SystemID)
+				ProcessJsonMessage(&message, kafkaMessage, &d, &s)
 			}
+
 		}
 		if !messageMatchRule {
 			log.Debugln("Message no matching rule in config.json")
@@ -243,10 +229,9 @@ func ProcessKafkaMessage(kafkaMessage []byte, devices_details map[string]gnfinge
 	}
 }
 
-func ProcessJsonMessage(message *gnfingest.Message, kafkaMessage []byte, device_details *gnfingest.Device_Details) {
+func ProcessJsonMessage(message *gnfingest.Message, kafkaMessage []byte, device *gnfingest.Device_Details, sensor *gnfingest.Sensor) {
 	//Rule-id for processing
-	rule_id := device_details.KVS_rule_id
-	log.Infof("Processing rule Rule-ID: %s Device: %s\n", rule_id, device_details.DeviceName)
+	rule_id := sensor.KVS_rule_id
 	rule := Rules[rule_id] // extract the rule in rules.json
 	// From message extract Tags as rawdata
 	var rawTags gnfingest.MessageTags
@@ -260,25 +245,22 @@ func ProcessJsonMessage(message *gnfingest.Message, kafkaMessage []byte, device_
 	if err1 != nil {
 		log.Errorf("Message Tags to map Unmarshal error", err)
 	}
-
 	// Declare fields map with interface
 	var fields = make(map[string]interface{}) // fields & indexes from message
-
 	//list of Indexes from rule.json
 	for _, i := range rule.IndexValues {
 		//Get indexes from Tags mapped value
 		value := fmt.Sprintf("%v", tagMap[i]) //Convert all values into string
 		fields[i] = value                     // Add value to data map
 	}
-
+	time := time.Unix(message.Timestamp, 0) //Extract timestamp in Unix format
 	log.Debugf("Index fields from message: %+v\n", fields)
 	// extract Field values
 	getFields(message, fields, &rule)
 	log.Debugf("Data & Index fields from message: %+v\n", fields)
 
-	// data for InfluxDB
-	WritePoint(fields, message, device_details)
-
+	// Write data to InfluxDB
+	gnfingest.WritePoint(fields, time, device, sensor)
 }
 
 func getFields(message *gnfingest.Message, fields map[string]interface{}, rule *gnfingest.RulesJSON) {
@@ -299,7 +281,7 @@ func getFields(message *gnfingest.Message, fields map[string]interface{}, rule *
 	//log.Debugf("Data fields extracted from message: %+v\n", fields)
 }
 
-func hometest(device_keys []gnfingest.Device_Details) {
+func hometest(device_keys map[string]gnfingest.Device_Details) {
 	// Processing sample message
 	var sample = "ev-interface-state.json"
 	//var sample = "isis-1.json"
@@ -310,19 +292,4 @@ func hometest(device_keys []gnfingest.Device_Details) {
 	// processs message just like a kafka message
 	ProcessKafkaMessage(byteResult, device_keys)
 
-}
-
-// Create the point with data for writing
-func WritePoint(fields map[string]interface{}, msg *gnfingest.Message, dev *gnfingest.Device_Details) {
-	tags := map[string]string{}
-	time := time.Unix(msg.Timestamp, 0)
-	p := influxdb2.NewPoint(dev.Measurement, tags, fields, time)
-	fmt.Printf("Point: %+v\n", p)
-	if dev.WriteApi != nil {
-		//Write point to the writeAPI
-		dev.WriteApi.WritePoint(p)
-		log.Debugf("Write data point: %+v\n", p)
-	} else {
-		log.Errorf("WriteApi for: %+v <nil>\n", dev.DeviceName)
-	}
 }

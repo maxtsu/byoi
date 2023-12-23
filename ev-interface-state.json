@@ -3,7 +3,7 @@
   "timestamp": 1701372976613000000,
   "tags": {
     "interface_name": "FourHundredGigE0/0/3/0",
-    "path": "interfaces/interface/state",
+    "path": "/interfaces/interface/state/",
     "prefix": "openconfig-interfaces:",
     "source": "10.213.97.34:57344",
     "subscription-name": "event_driven_hb"

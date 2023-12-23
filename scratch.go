@@ -40,43 +40,29 @@ func main() {
 
 	fmt.Printf("Device_details: %+v\n", device_details)
 
-	for i := 1; i < 2; i++ {
-		// Create a point
-		tags := map[string]string{}
-		fields := map[string]interface{}{
-			"source":       "nodeX",
-			"admin-status": "UP",
-			"oper-status":  "DOWN",
-			"bytes_sent":   i,
-		}
-
-		p := influxdb2.NewPoint(
-			measurement, tags, fields, time.Now(),
-		)
-		//Write point to the writeAPI
-
-		//writeAPI.WritePoint(p)
-		fmt.Printf("Write points: %+v\n", p)
-		time.Sleep(3 * time.Second)
+	// Create a point
+	tags := map[string]string{}
+	fields := map[string]interface{}{
+		"source":       "nodeX",
+		"admin-status": "UP",
+		"oper-status":  "DOWN",
+		"bytes_sent":   i,
 	}
-	fmt.Printf("Write points flush\n")
+
+	p := influxdb2.NewPoint(
+		measurement, tags, fields, time.Now(),
+	)
+	//Write point to the writeAPI
+	dev := device_details["10.213.94.44"]
+	sensor := device_details["10.213.94.44"].Sensor["openconfig-interfaces:/interfaces/interface/state/"]
+	fmt.Printf("Write points\n")
+	//time.Sleep(3 * time.Second)
+
+	time := time.Now()
+	gnfingest.WritePoint(fields, time, &dev, &sensor)
+
 	// Force all unwritten data to be sent
 	//writeAPI.Flush()
 	// Ensures background processes finishes
 	//tandClient.Close()
-}
-
-// Create the point with data for writing
-func WritePointx(fields map[string]interface{}, msg *gnfingest.Message, dev *gnfingest.Device_Details) {
-	tags := map[string]string{}
-	time := time.Unix(msg.Timestamp, 0)
-	p := influxdb2.NewPoint(measurement, tags, fields, time)
-	fmt.Printf("Point: %+v\n", p)
-	if dev.WriteApi != nil {
-		//Write point to the writeAPI
-		dev.WriteApi.WritePoint(p)
-		log.Debugf("Write data point: %+v\n", p)
-	} else {
-		log.Errorf("WriteApi for: %+v <nil>\n", dev.DeviceName)
-	}
 }
