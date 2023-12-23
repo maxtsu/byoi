@@ -40,7 +40,6 @@ func main() {
 	fmt.Printf("Device_details: %+v\n", device_details)
 
 	// Create a point
-	tags := map[string]string{}
 	fields := map[string]interface{}{
 		"source":       "nodeX",
 		"admin-status": "UP",
