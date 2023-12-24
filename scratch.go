@@ -52,9 +52,9 @@ func main() {
 	sensor := device_details["10.213.94.44"].Sensor["openconfig-interfaces:/interfaces/interface/state/"]
 	fmt.Printf("Write points\n")
 
-	time := time.Now()
-	gnfingest.WritePoint(fields, time, &dev, &sensor)
-	time.Sleep(6 * time.Second)
+	times := time.Now()
+	gnfingest.WritePoint(fields, times, &dev, &sensor)
+	time.Sleep(3 * time.Second)
 	fmt.Printf("Finish Write points\n")
 
 	// Force all unwritten data to be sent
