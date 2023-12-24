@@ -55,6 +55,7 @@ func main() {
 
 	time := time.Now()
 	gnfingest.WritePoint(fields, time, &dev, &sensor)
+	fmt.Printf("Finish Write points\n")
 
 	// Force all unwritten data to be sent
 	//writeAPI.Flush()
