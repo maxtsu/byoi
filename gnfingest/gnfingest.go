@@ -9,8 +9,7 @@ import (
 	"time"
 
 	"github.com/gologme/log"
-	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
-	"github.com/influxdata/influxdb-client-go/v2/api"
+	client "github.com/influxdata/influxdb1-client/v2"
 )
 
 // gnmic Event Message partial struct
@@ -167,7 +166,7 @@ type Device_Details struct {
 	DeviceName string
 	Database   string
 	SystemID   string
-	WriteApi   api.WriteAPI
+	BatchPoint client.BatchPoints
 	Sensor     map[string]Sensor //key for map is KVS_path
 }
 
@@ -222,39 +221,44 @@ type RulesJSON struct {
 }
 
 // create InfluxDB client
-func InfluxdbClient(tand_host string, tand_port string, batchSize int, flushInterval int) influxdb2.Client {
-	// set options for influx client
-	options := influxdb2.DefaultOptions()
-	options.SetBatchSize(uint(batchSize))
-	options.SetFlushInterval(uint(flushInterval))
-	options.SetLogLevel(3) //0 error, 1 - warning, 2 - info, 3 - debug
-	// create client
+func InfluxdbClient(tand_host string, tand_port string) client.Client {
+	// Make Influx client
 	url := "http://" + tand_host + ":" + tand_port
-	c := influxdb2.NewClientWithOptions(url, "my-token", options)
+	c, err := client.NewHTTPClient(client.HTTPConfig{
+		Addr: url,
+	})
+	if err != nil {
+		log.Errorln("Error creating InfluxDB Client: ", err.Error())
+	}
 	defer c.Close()
-	log.Infof("Created InfluxDB Client: %+v\n", c)
+	log.Infoln("InfluxDB Client connection", c)
 	return c //return the influx client
 }
 
-// Create Influx writeAPI for each database (source) from device_details list
-func InfluxClientWriteAPIs(c influxdb2.Client, device_details map[string]Device_Details) {
+// Create Influx BatchPoints for each database (source) from device_details list
+func InfluxClientBatchPoint(c client.Client, device_details map[string]Device_Details) {
 	for name, d := range device_details {
-		writeapi := c.WriteAPI("", d.Database) //my-org maybe an issue
-		d.WriteApi = writeapi
-		fmt.Printf("d.WriteApi: %+v\n", d.WriteApi)
-		device_details[name] = d //Update slice of Devices with the WriteAPI
+		// Create a new point batch
+		bp, _ := client.NewBatchPoints(client.BatchPointsConfig{
+			Database: d.Database, //Use database from devce_details
+		})
+		d.BatchPoint = bp
+		device_details[name] = d //Update slice of Devices with batchpoint
+		log.Infof("Influx Batchpoint created for %s using database: %s\n", d.DeviceName, d.Database)
 	}
 }
 
 // Create the point with data for writing
-func WritePoint(fields map[string]interface{}, time time.Time, dev *Device_Details, sensor *Sensor) {
+func AddPoint(fields map[string]interface{}, time time.Time, dev *Device_Details, sensor *Sensor) {
+	// Create a point and add to batch
 	tags := map[string]string{}
-	p := influxdb2.NewPoint(sensor.Measurement, tags, fields, time)
-	fmt.Printf("Point: %+v\n", p)
-	if dev.WriteApi != nil {
-		//Write point to the writeAPI
-		dev.WriteApi.WritePoint(p)
-		log.Debugf("Write data point: %+v\n", p)
+	pt, err := client.NewPoint(sensor.Measurement, tags, fields, time)
+	if err != nil {
+		log.Errorf("Device %s Create point error: %s\n", dev.DeviceName, err.Error())
+	}
+	if dev.BatchPoint != nil {
+		dev.BatchPoint.AddPoint(pt) //Add point to the BatchPoint
+		log.Debugf("Device %s Write data point: %+v\n", dev.DeviceName, pt)
 	} else {
 		log.Errorf("WriteApi for: %+v <nil>\n", dev.DeviceName)
 	}

@@ -1,0 +1,16 @@
+FROM golang:alpine as builder
+
+RUN apk add alpine-sdk
+
+WORKDIR /
+
+COPY gnfingest/. gnfingest/.
+COPY main.go .
+COPY go.mod .
+COPY go.sum .
+COPY scratch.go .
+COPY write.py .
+RUN go mod download
+
+# Updates the package index and installs python3 in the alpine container
+RUN apk --update add python3 nano
