@@ -259,8 +259,8 @@ func ProcessJsonMessage(message *gnfingest.Message, kafkaMessage []byte, device 
 	getFields(message, fields, &rule)
 	log.Debugf("Data & Index fields from message: %+v\n", fields)
 
-	// Write data to InfluxDB
-	gnfingest.WritePoint(fields, time, device, sensor)
+	// Add datapoint to InfluxDB BatchPoint
+	gnfingest.AddPoint(fields, time, device, sensor)
 }
 
 func getFields(message *gnfingest.Message, fields map[string]interface{}, rule *gnfingest.RulesJSON) {

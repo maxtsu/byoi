@@ -25,11 +25,10 @@ func main() {
 }
 
 type GroupData struct {
-	Name          string
-	Number        int
-	Timeout       *time.Ticker
-	TimeoutTicker chan bool
-	Ping          chan struct{}
+	Name    string
+	Number  int
+	Timeout *time.Ticker
+	Flush   chan struct{}
 }
 
 func (g *GroupData) print() {
@@ -48,7 +47,7 @@ func create(name string) *GroupData {
 
 func (g *GroupData) periodic() {
 	signal := make(chan struct{})
-	g.Ping = signal
+	g.Flush = signal
 	for {
 		select {
 		case <-g.Timeout.C: // Activate periodically
@@ -69,7 +68,7 @@ func (g *GroupData) add(n int) {
 	if g.Number == size {
 		//g.flush()
 		//g.Number = 0
-		g.Ping <- struct{}{}
+		g.Flush <- struct{}{}
 	}
 }
 
