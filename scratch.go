@@ -23,8 +23,8 @@ var measurement = "external/bt-kafka/cisco_resources/byoi"
 // main function
 func main() {
 	// connect influxDB create Influx client return batchpoint
-	//var configfile = "config.json"
-	var configfile = "/etc/byoi/config.json"
+	var configfile = "config.json"
+	//var configfile = "/etc/byoi/config.json"
 	//convert the config.json to a struct
 	byteResult := gnfingest.ReadFile(configfile)
 	var configjson gnfingest.Configjson
