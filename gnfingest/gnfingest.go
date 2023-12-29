@@ -13,6 +13,7 @@ import (
 )
 
 var InfluxClient client.Client
+var GlobalString string = "THIS STRING"
 
 // gnmic Event Message partial struct
 type Message struct {
