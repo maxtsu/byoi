@@ -262,6 +262,8 @@ func (dev *Device_Details) FlushPoints() {
 	if error != nil {
 		log.Errorf("Device %s Create BatchPoint error: %s\n", dev.DeviceName, error.Error())
 	}
+	fmt.Printf("ERROR: %+v\n", error.Error())
+	fmt.Printf("BATCHPOINT: %+v\n", batchPoint)
 	pts := dev.Points
 	batchPoint.AddPoints(pts)
 	err := InfluxClient.Write(batchPoint) //Write batchpoint to Influx
