@@ -15,12 +15,12 @@ import (
 )
 
 // Global Variables
-var batchSize = 10       // Influx write batch size
-var flushInterval = 2000 // Influx write flush intervale
+const BatchSize = 10       // Influx write batch size
+const flushInterval = 2000 // Influx write flush intervale
 
-var configfile = "config.json"
+const configfile = "config.json"
 
-// var configfile = "/etc/byoi/config.json"
+// const configfile = "/etc/byoi/config.json"
 var rulesfile = "rules.json"
 
 // Global variables 'Rules'
@@ -74,10 +74,9 @@ func main() {
 	device_details := configjson.DeviceDetails(keys)
 
 	//Create InfluxDB client
-	influxClient := gnfingest.InfluxdbClient(tand_host, tand_port, batchSize, flushInterval)
-	log.Infof("Client create with client %+v\n", influxClient)
-	// Create WriteAPI endpoint for each device
-	gnfingest.InfluxClientWriteAPIs(influxClient, device_details)
+	gnfingest.InfluxCreateClient(tand_host, tand_port)
+	log.Infof("Influx client create %+v\n", gnfingest.InfluxClient)
+
 	// extract the brokers topics and configuration from the configjson KVS
 	kafkaCfg := gnfingest.KVS_parsing(configjson.Hbin.Inputs[0].Plugin.Config.KVS, []string{"brokers", "topics",
 		"saslusername", "saslpassword", "saslmechanism", "securityprotocol"})
@@ -179,7 +178,7 @@ func main() {
 	hometest(device_details) //call hometest function
 
 	// Ensures background processes finishes
-	influxClient.Close()
+	gnfingest.InfluxClient.Close()
 }
 
 // Function to safely slice a string
@@ -259,8 +258,8 @@ func ProcessJsonMessage(message *gnfingest.Message, kafkaMessage []byte, device 
 	getFields(message, fields, &rule)
 	log.Debugf("Data & Index fields from message: %+v\n", fields)
 
-	// Add datapoint to InfluxDB BatchPoint
-	gnfingest.AddPoint(fields, time, device, sensor)
+	// Create InfluxDB Point and append to slice/list in Device_details
+	device.AddPoint(fields, time, sensor, BatchSize)
 }
 
 func getFields(message *gnfingest.Message, fields map[string]interface{}, rule *gnfingest.RulesJSON) {

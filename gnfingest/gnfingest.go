@@ -12,6 +12,8 @@ import (
 	client "github.com/influxdata/influxdb1-client/v2"
 )
 
+var InfluxClient client.Client
+
 // gnmic Event Message partial struct
 type Message struct {
 	Name      string `json:"name"`
@@ -166,7 +168,7 @@ type Device_Details struct {
 	DeviceName string
 	Database   string
 	SystemID   string
-	BatchPoint client.BatchPoints
+	Points     []*client.Point
 	Sensor     map[string]Sensor //key for map is KVS_path
 }
 
@@ -220,46 +222,49 @@ type RulesJSON struct {
 	Fields      []string `json:"fields"`
 }
 
-// create InfluxDB client
-func InfluxdbClient(tand_host string, tand_port string) client.Client {
+// create InfluxDB client Global variable InfluxClient
+func InfluxCreateClient(tand_host string, tand_port string) {
 	// Make Influx client
 	url := "http://" + tand_host + ":" + tand_port
-	c, err := client.NewHTTPClient(client.HTTPConfig{
+	InfluxClient, err := client.NewHTTPClient(client.HTTPConfig{
 		Addr: url,
 	})
 	if err != nil {
 		log.Errorln("Error creating InfluxDB Client: ", err.Error())
 	}
-	defer c.Close()
-	log.Infoln("InfluxDB Client connection", c)
-	return c //return the influx client
-}
-
-// Create Influx BatchPoints for each database (source) from device_details list
-func InfluxClientBatchPoint(c client.Client, device_details map[string]Device_Details) {
-	for name, d := range device_details {
-		// Create a new point batch
-		bp, _ := client.NewBatchPoints(client.BatchPointsConfig{
-			Database: d.Database, //Use database from devce_details
-		})
-		d.BatchPoint = bp
-		device_details[name] = d //Update slice of Devices with batchpoint
-		log.Infof("Influx Batchpoint created for %s using database: %s\n", d.DeviceName, d.Database)
-	}
+	defer InfluxClient.Close()
+	log.Infoln("InfluxDB Client connection", InfluxClient)
 }
 
 // Create the point with data for writing
-func AddPoint(fields map[string]interface{}, time time.Time, dev *Device_Details, sensor *Sensor) {
+func (dev *Device_Details) AddPoint(fields map[string]interface{}, time time.Time, sensor *Sensor, batchSize int) {
 	// Create a point and add to batch
 	tags := map[string]string{}
 	pt, err := client.NewPoint(sensor.Measurement, tags, fields, time)
 	if err != nil {
 		log.Errorf("Device %s Create point error: %s\n", dev.DeviceName, err.Error())
 	}
-	if dev.BatchPoint != nil {
-		dev.BatchPoint.AddPoint(pt) //Add point to the BatchPoint
-		log.Debugf("Device %s Write data point: %+v\n", dev.DeviceName, pt)
-	} else {
-		log.Errorf("WriteApi for: %+v <nil>\n", dev.DeviceName)
+	// Add InfluxDB point to slice
+	dev.Points = append(dev.Points, pt)
+	// Check size of slice/list of Points
+	if len(dev.Points) > batchSize {
+		//Flush the data points in the device
+		dev.FlushPoints()
 	}
+}
+
+// Create Influx BatchPoints for database/device And Write datapoints from device_details list
+func (dev *Device_Details) FlushPoints() {
+	// Create BatchPoint
+	batchPoint, _ := client.NewBatchPoints(client.BatchPointsConfig{
+		Database: dev.Database, //Use database from devce_details
+	})
+	pts := dev.Points
+	batchPoint.AddPoints(pts)
+	err := InfluxClient.Write(batchPoint) //Write batchpoint to Influx
+	if err != nil {
+		log.Errorf("Write Batchpoint to Influx database %s error %s\n", dev.Database, err.Error())
+	}
+	log.Infof("Write Batchpoint to Influx for %s using database: %s\n", dev.DeviceName, dev.Database)
+	dev.Points = nil //Clear slice of Points in device_details back to zero
 }

@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/gologme/log"
-	client "github.com/influxdata/influxdb1-client/v2"
 )
 
 //var batchSize = 10       // Influx write batch size
@@ -38,11 +37,9 @@ func main() {
 	device_details := configjson.DeviceDetails(keys)
 
 	//Create InfluxDB client
-	influxClient := gnfingest.InfluxdbClient(tand_host, tand_port)
-	log.Infof("Client create with client %+v\n", influxClient)
-	fmt.Printf("Client: %+v\n", influxClient)
-	// Create Batch Points
-	gnfingest.InfluxClientBatchPoint(influxClient, device_details)
+	gnfingest.InfluxCreateClient(tand_host, tand_port)
+	log.Infof("Client create with client %+v\n", gnfingest.InfluxClient)
+	fmt.Printf("Client: %+v\n", gnfingest.InfluxClient)
 
 	fmt.Printf("Device_details: %+v\n", device_details)
 	//Write point to the writeAPI
@@ -50,7 +47,7 @@ func main() {
 	sensor := device_details["10.213.94.44"].Sensor["openconfig-interfaces:/interfaces/interface/state/"]
 	fmt.Printf("Write points\n")
 
-	fmt.Printf("Empty BatchP %+v\n", dev.BatchPoint)
+	fmt.Printf("Empty Points %+v\n", dev.Points)
 	// Create a point
 	fields := map[string]interface{}{
 		"interfaces/interface/name":                "ge-0/0/1",
@@ -58,7 +55,8 @@ func main() {
 		"oper-status": "DOWN",
 	}
 	times := time.Now()
-	gnfingest.AddPoint(fields, times, &dev, &sensor)
+	dev.AddPoint(fields, times, &sensor, BatchSize)
+	//gnfingest.AddPoint(fields, times, &dev, &sensor)
 
 	// Create a 2nd point
 	fields = map[string]interface{}{
@@ -66,22 +64,18 @@ func main() {
 		"interfaces/interface/status/admin-status": "UP",
 	}
 	times = time.Now()
-	gnfingest.AddPoint(fields, times, &dev, &sensor)
+	dev.AddPoint(fields, times, &sensor, BatchSize)
+	//gnfingest.AddPoint(fields, times, &dev, &sensor)
 
-	pts := dev.BatchPoint.Points()
+	pts := dev.Points
 	fmt.Printf("Listed Points %+v\n", pts)
 
-	// Write the batch
-	fmt.Printf("BatchPoints before %+v\n", dev.BatchPoint)
-	WriteBatch(influxClient, dev.BatchPoint)
-	influxClient.Write(dev.BatchPoint)
+	// Flush points
+	fmt.Printf("Device Points before %+v\n", dev.Points)
+	dev.FlushPoints()
+	fmt.Printf("Device Points after %+v\n", dev.Points)
 
-	fmt.Printf("BatchPoints after %+v\n", dev.BatchPoint)
 	time.Sleep(8 * time.Second)
 	fmt.Printf("Finish Write points\n")
 
-}
-
-func WriteBatch(c client.Client, bp client.BatchPoints) {
-	c.Write(bp)
 }
