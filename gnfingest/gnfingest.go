@@ -231,6 +231,7 @@ func InfluxCreateClient(tand_host string, tand_port string) {
 	})
 	if err != nil {
 		log.Errorln("Error creating InfluxDB Client: ", err.Error())
+		fmt.Println("Error creating InfluxDB Client: ", err.Error())
 	}
 	defer InfluxClient.Close()
 	log.Infoln("InfluxDB Client connection", InfluxClient)
@@ -274,6 +275,5 @@ func (dev *Device_Details) FlushPoints() {
 		}
 	} else {
 		log.Errorf("No Influx client to write data points\n")
-		fmt.Printf("INFLUXCLIENT NILNILNIL: %+v\n", InfluxClient)
 	}
 }
