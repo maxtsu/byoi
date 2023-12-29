@@ -256,9 +256,12 @@ func (dev *Device_Details) AddPoint(fields map[string]interface{}, time time.Tim
 // Create Influx BatchPoints for database/device And Write datapoints from device_details list
 func (dev *Device_Details) FlushPoints() {
 	// Create BatchPoint
-	batchPoint, _ := client.NewBatchPoints(client.BatchPointsConfig{
+	batchPoint, error := client.NewBatchPoints(client.BatchPointsConfig{
 		Database: dev.Database, //Use database from devce_details
 	})
+	if error != nil {
+		log.Errorf("Device %s Create BatchPoint error: %s\n", dev.DeviceName, error.Error())
+	}
 	pts := dev.Points
 	batchPoint.AddPoints(pts)
 	err := InfluxClient.Write(batchPoint) //Write batchpoint to Influx

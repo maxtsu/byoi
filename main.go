@@ -23,7 +23,6 @@ const configfile = "config.json"
 // const configfile = "/etc/byoi/config.json"
 var rulesfile = "rules.json"
 
-// Global variables 'Rules'
 var Rules = make(map[string]gnfingest.RulesJSON)
 
 // Getting Env details for TAND and group-id from ENV

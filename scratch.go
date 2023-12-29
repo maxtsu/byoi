@@ -13,9 +13,6 @@ import (
 const BatchSize = 10       // Influx write batch size
 const flushInterval = 2000 // Influx write flush intervale
 
-//var batchSize = 10       // Influx write batch size
-//var flushInterval = 2000 // Influx write flush interval
-
 var tand_host = "localhost"
 var tand_port = "8086"
 
@@ -49,9 +46,7 @@ func main() {
 	//Write point to the writeAPI
 	dev := device_details["10.213.94.44"]
 	sensor := device_details["10.213.94.44"].Sensor["openconfig-interfaces:/interfaces/interface/state/"]
-	fmt.Printf("Write points\n")
 
-	fmt.Printf("Empty Points %+v\n", dev.Points)
 	// Create a point
 	fields := map[string]interface{}{
 		"interfaces/interface/name":                "ge-0/0/1",
