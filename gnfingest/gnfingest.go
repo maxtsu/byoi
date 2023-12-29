@@ -235,6 +235,7 @@ func InfluxCreateClient(tand_host string, tand_port string) {
 	}
 	defer InfluxClient.Close()
 	log.Infoln("InfluxDB Client connection", InfluxClient)
+	fmt.Println("InfluxDB Client connection", InfluxClient)
 }
 
 // Create the point with data for writing
