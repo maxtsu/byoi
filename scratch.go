@@ -9,6 +9,10 @@ import (
 	"github.com/gologme/log"
 )
 
+// Global Variables
+const BatchSize = 10       // Influx write batch size
+const flushInterval = 2000 // Influx write flush intervale
+
 //var batchSize = 10       // Influx write batch size
 //var flushInterval = 2000 // Influx write flush interval
 
