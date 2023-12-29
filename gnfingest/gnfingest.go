@@ -267,10 +267,15 @@ func (dev *Device_Details) FlushPoints() {
 	pts := dev.Points
 	batchPoint.AddPoints(pts)
 	fmt.Printf("INFLUXCLIENT: %+v\n", InfluxClient)
-	err := InfluxClient.Write(batchPoint) //Write batchpoint to Influx
-	if err != nil {
-		log.Errorf("Write Batchpoint to Influx database %s error %s\n", dev.Database, err.Error())
+	if InfluxClient != nil {
+		err := InfluxClient.Write(batchPoint) //Write batchpoint to Influx
+		if err != nil {
+			log.Errorf("Write Batchpoint to Influx database %s error %s\n", dev.Database, err.Error())
+		} else {
+			log.Infof("Write Batchpoint to Influx for %s using database: %s\n", dev.DeviceName, dev.Database)
+			dev.Points = nil //Clear slice of Points in device_details back to zero
+		}
+	} else {
+		log.Errorf("No Influx client to write data points\n")
 	}
-	log.Infof("Write Batchpoint to Influx for %s using database: %s\n", dev.DeviceName, dev.Database)
-	dev.Points = nil //Clear slice of Points in device_details back to zero
 }
