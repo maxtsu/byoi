@@ -74,7 +74,7 @@ func main() {
 	dev.FlushPoints()
 	fmt.Printf("Device Points after %+v\n", dev.Points)
 
-	time.Sleep(8 * time.Second)
+	time.Sleep(5 * time.Second)
 	fmt.Printf("Finish Write points\n")
 
 }
