@@ -278,4 +278,7 @@ func (dev *Device_Details) FlushPoints() {
 	} else {
 		log.Errorf("No Influx client to write data points\n")
 	}
+	if InfluxClient == nil {
+		fmt.Printf("INFLUXCLIENT NILNILNIL: %+v\n", InfluxClient)
+	}
 }
