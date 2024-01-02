@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/confluentinc/confluent-kafka-go/kafka"
-	"github.com/gologme/log"
 )
 
 const config_file = "app-config.json"
@@ -28,22 +27,13 @@ func main() {
 	fmt.Printf("app-config.json %+v\n", configjson)
 	// Create kafka consumer configuration for kafkaCfg
 	consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
-		"bootstrap.servers": configjson.Kafka.BootstrapServers,
-		"sasl.mechanisms":   configjson.Kafka.SaslMechanisms,
-		"security.protocol": configjson.Kafka.SecurityProtocol,
-		"sasl.username":     configjson.Kafka.SaslUsername,
-		"sasl.password":     configjson.Kafka.SaslPassword,
-		"ssl.ca.location":   configjson.Kafka.SslCaLocation,
-		"group.id":          configjson.Kafka.GroupID,
-
-		/*"bootstrap.servers": "ilayer-kafka-0-dev1-1.gnf.test.btnetwork.co.uk:9092",
-		"sasl.mechanisms":   "PLAIN",
-		"security.protocol": "SASL_SSL",
-		"sasl.username":     "user",
-		"sasl.password":     "secret1",
-		// "ssl.ca.location":    "ca.crt",
-		"ssl.ca.location":    "/home/juniper/api_gw_stuff/dev01-primary/kafka/certs/client/jks_to_pem/CARoot.pem",
-		"group.id":           "test", */
+		"bootstrap.servers":  configjson.Kafka.BootstrapServers,
+		"sasl.mechanisms":    configjson.Kafka.SaslMechanisms,
+		"security.protocol":  configjson.Kafka.SecurityProtocol,
+		"sasl.username":      configjson.Kafka.SaslUsername,
+		"sasl.password":      configjson.Kafka.SaslPassword,
+		"ssl.ca.location":    configjson.Kafka.SslCaLocation,
+		"group.id":           configjson.Kafka.GroupID,
 		"session.timeout.ms": 6000,
 		// Start reading from the first message of each assigned
 		// partition if there are no previously committed offsets
@@ -53,10 +43,10 @@ func main() {
 		"enable.auto.offset.store": false,
 	})
 	if err != nil {
-		log.Error("Failed to create consumer. ", err)
+		fmt.Println("Failed to create consumer. ", err)
 		os.Exit(1)
 	}
-	log.Info("Created Consumer. ", consumer)
+	fmt.Println("Created Consumer. ", consumer)
 
 	topics := []string{"gnf.network.syslog.messages"}
 	err = consumer.SubscribeTopics(topics, nil)
@@ -67,7 +57,7 @@ func main() {
 		time.Sleep(2 * time.Second)
 		select {
 		case sig := <-sigchan:
-			log.Warnf("Caught signal %v: terminating\n", sig)
+			fmt.Printf("Caught signal %v: terminating\n", sig)
 			run = false
 		default:
 			// Poll the consumer for messages or events
@@ -80,7 +70,7 @@ func main() {
 			case *kafka.Message:
 				// Process the message received.
 				//fmt.Printf("Got a kafka message\n")
-				log.Debugf("%% Message on %s: %s\n", e.TopicPartition, string(e.Value)[100:])
+				fmt.Printf("%% Message on %s: %s\n", e.TopicPartition, string(e.Value)[100:])
 				kafkaMessage := string(e.Value)
 				fmt.Printf("\nkafkaMessage: %s\n", kafkaMessage) //Message in single string
 				json.Unmarshal([]byte(kafkaMessage), &message)
@@ -104,12 +94,12 @@ func main() {
 			case kafka.Error:
 				// Errors are informational, the client will try to
 				// automatically recover.
-				log.Errorf("%% Error: %v: %v\n", e.Code(), e)
+				fmt.Printf("%% Error: %v: %v\n", e.Code(), e)
 				if e.Code() == kafka.ErrAllBrokersDown {
-					log.Errorf("Kafka error. All brokers down ")
+					fmt.Printf("Kafka error. All brokers down ")
 				}
 			default:
-				log.Errorf("Ignored %v\n", e)
+				fmt.Printf("Ignored %v\n", e)
 			}
 		}
 	}
