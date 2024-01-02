@@ -12,7 +12,7 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 )
 
-const config_file = "app-config.json"
+const config_file = "kafka-app-conf.json"
 
 func main() {
 	sigchan := make(chan os.Signal, 1)
