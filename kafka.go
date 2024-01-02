@@ -63,7 +63,7 @@ func main() {
 			run = false
 		default:
 			// Poll the consumer for messages or events
-			message := openconfig.Message{}
+			message := gnfingest.Message{}
 			event := consumer.Poll(400)
 			if event == nil {
 				continue
