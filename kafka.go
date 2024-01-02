@@ -38,7 +38,7 @@ func main() {
 		// Start reading from the first message of each assigned
 		// partition if there are no previously committed offsets
 		// for this group.
-		"auto.offset.reset": "earliest",
+		"auto.offset.reset": configjson.Kafka.AutoOffset,
 		// Whether or not we store offsets automatically.
 		"enable.auto.offset.store": false,
 	})
@@ -48,7 +48,7 @@ func main() {
 	}
 	fmt.Println("Created Consumer. ", consumer)
 
-	topics := []string{"gnf.network.syslog.messages"}
+	topics := []string{configjson.Kafka.Topics}
 	err = consumer.SubscribeTopics(topics, nil)
 
 	run := true
@@ -116,5 +116,6 @@ type Config struct {
 		SslCaLocation    string `json:"ssl.ca.location"`
 		GroupID          string `json:"group.id"`
 		Topics           string `json:"topics"`
+		AutoOffset       string `json:"auto.offset.reset"`
 	} `json:"kafka"`
 }
