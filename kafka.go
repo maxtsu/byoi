@@ -1,7 +1,7 @@
 package main
 
 import (
-	"byoi/openconfig"
+	"byoi/gnfingest"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -13,10 +13,19 @@ import (
 	"github.com/gologme/log"
 )
 
+const config_file = "app-config.json"
+
 func main() {
 	sigchan := make(chan os.Signal, 1)
 	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
 
+	byteResult := gnfingest.ReadFile(config_file)
+	var configjson Config
+	err := json.Unmarshal(byteResult, &configjson)
+	if err != nil {
+		fmt.Println("app-config.json Unmarshall error", err)
+	}
+	fmt.Printf("app-config.json %+v\n", configjson)
 	// Create kafka consumer configuration for kafkaCfg
 	consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
 		"bootstrap.servers": "ilayer-kafka-0-dev1-1.gnf.test.btnetwork.co.uk:9092",
@@ -96,4 +105,18 @@ func main() {
 			}
 		}
 	}
+}
+
+// configuration file app-config.json
+type Config struct {
+	Kafka struct {
+		BootstrapServers string `json:"bootstrap.servers"`
+		SaslMechanisms   string `json:"sasl.mechanisms"`
+		SecurityProtocol string `json:"security.protocol"`
+		SaslUsername     string `json:"sasl.username"`
+		SaslPassword     string `json:"sasl.password"`
+		SslCaLocation    string `json:"ssl.ca.location"`
+		GroupID          string `json:"group.id"`
+		Topics           string `json:"topics"`
+	} `json:"kafka"`
 }

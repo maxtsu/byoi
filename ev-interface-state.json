@@ -1,6 +1,6 @@
 {
   "name": "event_driven_hb",
-  "timestamp": 1701372976613000000,
+  "timestamp": 170137297661300000,
   "tags": {
     "interface_name": "FourHundredGigE0/0/3/0",
     "path": "/interfaces/interface/state/",

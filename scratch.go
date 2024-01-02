@@ -23,8 +23,6 @@ var measurement = "external/bt-kafka/cisco_resources/byoi"
 
 // main function
 func main() {
-	fmt.Println("GLOBAL STRING", gnfingest.GlobalString)
-
 	// connect influxDB create Influx client return batchpoint
 	var configfile = "config.json"
 	//var configfile = "/etc/byoi/config.json"
@@ -40,9 +38,9 @@ func main() {
 	device_details := configjson.DeviceDetails(keys)
 
 	//Create InfluxDB client
-	gnfingest.InfluxCreateClient(tand_host, tand_port)
-	log.Infof("Client create with client %+v\n", gnfingest.InfluxClient)
-	fmt.Printf("Client: %+v\n", gnfingest.InfluxClient)
+	InfluxClient := gnfingest.InfluxCreateClient(tand_host, tand_port)
+	log.Infof("Client create with client %+v\n", InfluxClient)
+	fmt.Printf("Client: %+v\n", InfluxClient)
 
 	fmt.Printf("Device_details: %+v\n", device_details)
 	//Write point to the writeAPI
@@ -56,8 +54,7 @@ func main() {
 		"oper-status": "DOWN",
 	}
 	times := time.Now()
-	dev.AddPoint(fields, times, &sensor, BatchSize)
-	//gnfingest.AddPoint(fields, times, &dev, &sensor)
+	dev.AddPoint(fields, times, &sensor, batchSize)
 
 	// Create a 2nd point
 	fields = map[string]interface{}{
@@ -65,7 +62,7 @@ func main() {
 		"interfaces/interface/status/admin-status": "UP",
 	}
 	times = time.Now()
-	dev.AddPoint(fields, times, &sensor, BatchSize)
+	dev.AddPoint(fields, times, &sensor, batchSize)
 	//gnfingest.AddPoint(fields, times, &dev, &sensor)
 
 	pts := dev.Points
@@ -73,7 +70,7 @@ func main() {
 
 	// Flush points
 	fmt.Printf("Device Points before %+v\n", dev.Points)
-	dev.FlushPoints()
+	dev.FlushPoints(InfluxClient)
 	fmt.Printf("Device Points after %+v\n", dev.Points)
 
 	time.Sleep(5 * time.Second)

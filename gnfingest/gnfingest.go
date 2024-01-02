@@ -12,8 +12,15 @@ import (
 	client "github.com/influxdata/influxdb1-client/v2"
 )
 
-var InfluxClient client.Client
-var GlobalString string = "THIS STRING"
+// Global Variables declared in main
+var batchSize int               // Influx write max batch size
+var flushInterval time.Duration // Influx write flush interval in milliseconds
+var InfluxClient client.Client  // Influx client
+func GlobalVariables(b int, f int) {
+	batchSize = b
+	flushInterval = time.Duration(f) * time.Millisecond
+
+}
 
 // gnmic Event Message partial struct
 type Message struct {
@@ -65,17 +72,14 @@ type MessageTags struct {
 
 // The Top struct for the config.json
 type Configjson struct {
-	Hbin    Hbin `json:"hbin"`
+	Hbin struct {
+		Inputs  []Inputs  `json:"inputs"`
+		Outputs []Outputs `json:"outputs"`
+	} `json:"hbin"`
 	Logging struct {
 		Level   string `json:"level"`
 		Enabled string `json:"enabled"`
 	} `json:"logging"`
-}
-
-// The Hbin struct for the config.json
-type Hbin struct {
-	Inputs  []Inputs  `json:"inputs"`
-	Outputs []Outputs `json:"outputs"`
 }
 
 type Outputs struct {
@@ -130,9 +134,9 @@ type KVS struct {
 }
 
 // Function to return list/slice of device details from config.json
-func (c *Configjson) DeviceDetails(keys []string) map[string]Device_Details {
+func (c *Configjson) DeviceDetails(keys []string) []*Device_Details {
 	// create map of devices key is DeviceName
-	var device_details = make(map[string]Device_Details)
+	var device_details = []*Device_Details{} //slice of pointers
 	for _, d := range c.Hbin.Inputs[0].Plugin.Config.Device {
 		var dev Device_Details
 		dev.DeviceName = d.Name
@@ -150,26 +154,29 @@ func (c *Configjson) DeviceDetails(keys []string) map[string]Device_Details {
 			sensor.KVS_path = kvs_pairs["path"]
 			sensor.KVS_rule_id = kvs_pairs["rule-id"]
 			sensor.KVS_prefix = kvs_pairs["prefix"]
-			//Sensor map index is concatenated prefix + path
+			//Sensor map key/index is concatenated prefix + path
 			map_key := sensor.KVS_prefix + sensor.KVS_path
 			sensors[map_key] = sensor
 		}
 		dev.Sensor = sensors
-		//Device map key is SystemID for source searching
-		device_details[dev.SystemID] = dev
+		dev.Timer = time.NewTimer(flushInterval) //Timer for flushing data
+		dev.Point = make(chan client.Point)      //goroutine channel for adding point data
+		go dev.TimerHandler()                    //start goroutine for handling timer
+		device_details = append(device_details, &dev)
 	}
 	return device_details
 }
 
 // struct defining sensor/rule for each device
-//
 // -device name -kvs path -kvs rule-id
 // -kvs prefix -measurement -database
 type Device_Details struct {
 	DeviceName string
 	Database   string
 	SystemID   string
-	Points     []*client.Point
+	Points     []*client.Point   //list/slice of batch points
+	Point      chan client.Point //single batch point channel
+	Timer      *time.Timer       //timer for flush data
 	Sensor     map[string]Sensor //key for map is KVS_path
 }
 
@@ -223,11 +230,13 @@ type RulesJSON struct {
 	Fields      []string `json:"fields"`
 }
 
-// create InfluxDB client Global variable InfluxClient
+// Create InfluxDB client Global variable InfluxClient
+// func InfluxCreateClient(tand_host string, tand_port string) client.Client {
 func InfluxCreateClient(tand_host string, tand_port string) {
 	// Make Influx client
 	url := "http://" + tand_host + ":" + tand_port
-	InfluxClient, err := client.NewHTTPClient(client.HTTPConfig{
+	var err error
+	InfluxClient, err = client.NewHTTPClient(client.HTTPConfig{
 		Addr: url,
 	})
 	if err != nil {
@@ -236,28 +245,42 @@ func InfluxCreateClient(tand_host string, tand_port string) {
 	}
 	defer InfluxClient.Close()
 	log.Infoln("InfluxDB Client connection", InfluxClient)
-	fmt.Println("InfluxDB Client connection", InfluxClient)
+	//return influxClient
 }
 
-// Create the point with data for writing
-func (dev *Device_Details) AddPoint(fields map[string]interface{}, time time.Time, sensor *Sensor, batchSize int) {
-	// Create a point and add to batch
-	tags := map[string]string{}
-	pt, err := client.NewPoint(sensor.Measurement, tags, fields, time)
-	if err != nil {
-		log.Errorf("Device %s Create point error: %s\n", dev.DeviceName, err.Error())
-	}
-	// Add InfluxDB point to slice
-	dev.Points = append(dev.Points, pt)
-	// Check size of slice/list of Points
-	if len(dev.Points) > batchSize {
-		//Flush the data points in the device
-		dev.FlushPoints()
+// Device timer handler Timer will fire every interval
+func (dev *Device_Details) TimerHandler() {
+	for {
+		select {
+		//Timeout fire after flushinterval
+		case <-dev.Timer.C:
+			fmt.Printf("Timer %s fired\n", dev.DeviceName)
+
+			dev.Timer.Stop()
+			d := *dev
+			go FlushPoints(d)
+			dev.Points = nil //Clear slice of Points in device_details back to zero
+			//Reset the timer
+			dev.Timer = time.NewTimer(flushInterval)
+		//Add point to the slice of points for device
+		case point := <-dev.Point:
+			dev.Points = append(dev.Points, &point)
+			if len(dev.Points) > batchSize {
+				fmt.Printf("Max batch size flush: %s\n", dev.DeviceName)
+
+				dev.Timer.Stop()
+				d := *dev
+				go FlushPoints(d)
+				dev.Points = nil //Clear slice of Points in device_details back to zero
+				//Reset the timer
+				dev.Timer = time.NewTimer(flushInterval)
+			}
+		}
 	}
 }
 
-// Create Influx BatchPoints for database/device And Write datapoints from device_details list
-func (dev *Device_Details) FlushPoints() {
+// Flush all point data Write to Influx
+func FlushPoints(dev Device_Details) {
 	// Create BatchPoint
 	batchPoint, error := client.NewBatchPoints(client.BatchPointsConfig{
 		Database: dev.Database, //Use database from devce_details
@@ -265,15 +288,15 @@ func (dev *Device_Details) FlushPoints() {
 	if error != nil {
 		log.Errorf("Device %s Create BatchPoint error: %s\n", dev.DeviceName, error.Error())
 	}
-	pts := dev.Points
-	batchPoint.AddPoints(pts)
+	batchPoint.AddPoints(dev.Points)
+	fmt.Printf("Flushing points: %+v\n", dev.Points)
+
 	if InfluxClient != nil {
 		err := InfluxClient.Write(batchPoint) //Write batchpoint to Influx
 		if err != nil {
 			log.Errorf("Write Batchpoint to Influx database %s error %s\n", dev.Database, err.Error())
 		} else {
 			log.Infof("Write Batchpoint to Influx for %s using database: %s\n", dev.DeviceName, dev.Database)
-			dev.Points = nil //Clear slice of Points in device_details back to zero
 		}
 	} else {
 		log.Errorf("No Influx client to write data points\n")
