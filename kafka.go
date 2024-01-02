@@ -28,14 +28,22 @@ func main() {
 	fmt.Printf("app-config.json %+v\n", configjson)
 	// Create kafka consumer configuration for kafkaCfg
 	consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
-		"bootstrap.servers": "ilayer-kafka-0-dev1-1.gnf.test.btnetwork.co.uk:9092",
+		"bootstrap.servers": configjson.Kafka.BootstrapServers,
+		"sasl.mechanisms":   configjson.Kafka.SaslMechanisms,
+		"security.protocol": configjson.Kafka.SecurityProtocol,
+		"sasl.username":     configjson.Kafka.SaslUsername,
+		"sasl.password":     configjson.Kafka.SaslPassword,
+		"ssl.ca.location":   configjson.Kafka.SslCaLocation,
+		"group.id":          configjson.Kafka.GroupID,
+
+		/*"bootstrap.servers": "ilayer-kafka-0-dev1-1.gnf.test.btnetwork.co.uk:9092",
 		"sasl.mechanisms":   "PLAIN",
 		"security.protocol": "SASL_SSL",
 		"sasl.username":     "user",
 		"sasl.password":     "secret1",
 		// "ssl.ca.location":    "ca.crt",
 		"ssl.ca.location":    "/home/juniper/api_gw_stuff/dev01-primary/kafka/certs/client/jks_to_pem/CARoot.pem",
-		"group.id":           "test",
+		"group.id":           "test", */
 		"session.timeout.ms": 6000,
 		// Start reading from the first message of each assigned
 		// partition if there are no previously committed offsets
