@@ -2,8 +2,12 @@ package main
 
 import (
 	"fmt"
+	"io"
+	"os"
 	"strconv"
 	"time"
+
+	"github.com/gologme/log"
 )
 
 const size = 20     //batch size
@@ -11,6 +15,21 @@ const period = 8000 // flush timer ms
 
 // main function
 func main() {
+	log.EnableLevelsByNumber(5)
+	log.EnableFormattedPrefix()
+	log.Infoln("Logging configured as debug")
+	// open file and create if non-existent
+	file, err := os.OpenFile("debug.log.0", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+	// assign it to the standard logger and file
+	multi := io.MultiWriter(file, os.Stdout)
+	log.SetOutput(multi)
+
+	log.Infof("THIS IS a log\n")
+
 	g1 := create("one")
 	g2 := create("two")
 	device_detail := []*GroupData{g1, g2}
