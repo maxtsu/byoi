@@ -4,6 +4,7 @@ import (
 	"byoi/gnfingest"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"os/signal"
 	"strings"
@@ -21,7 +22,7 @@ const flushInterval = 6000 // Influx write flush interval in ms
 const configfile = "config.json"
 
 // const configfile = "/etc/byoi/config.json"
-var rulesfile = "rules.json"
+var rulesfile = "event_rules.json"
 
 var Rules = make(map[string]gnfingest.RulesJSON)
 
@@ -31,8 +32,9 @@ var tand_port = os.Getenv("TAND_PORT")
 var group = (os.Getenv("CHANNEL'") + "-golang1")
 
 func main() {
+	// signal channel to notify on SIGHUP
 	sigchan := make(chan os.Signal, 1)
-	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
+	signal.Notify(sigchan, syscall.SIGHUP)
 
 	// Set global variables in gnfingest package
 	gnfingest.GlobalVariables(batchSize, flushInterval)
@@ -69,6 +71,16 @@ func main() {
 	log.EnableLevelsByNumber(level)
 	log.EnableFormattedPrefix()
 	log.Infoln("Logging configured as ", strings.ToUpper(loggingLevel), ". Set at level ", level)
+
+	// Open log file and create if non-existent
+	file, err := os.OpenFile("app.log.0", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+	// assign it to the standard logger and file
+	multi := io.MultiWriter(file, os.Stdout)
+	log.SetOutput(multi)
 
 	// config.json list of device key from values under sensor for searching messages
 	keys := []string{"path", "rule-id", "prefix"} //list of keys/parameters to extract from the KVS section
@@ -120,7 +132,7 @@ func main() {
 	}
 	log.Infoln("Kafka consumer subscribed to topics: ", topics)
 
-	// Load rules.json into struct
+	// Load even_rules.json into struct
 	byteResult = gnfingest.ReadFile(rulesfile)
 	var r1 []gnfingest.RulesJSON
 	err = json.Unmarshal(byteResult, &r1)
@@ -135,7 +147,7 @@ func main() {
 	run := false // for hometest
 	for run {
 		fmt.Printf("waiting for kafka message\n")
-		time.Sleep(2 * time.Second)
+		///time.Sleep(2 * time.Second)  <=== REMOVE
 		select {
 		case sig := <-sigchan:
 			log.Warnf("Caught signal %v: terminating\n", sig)
