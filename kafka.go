@@ -68,7 +68,6 @@ func main() {
 			case *kafka.Message:
 				// Process the message received.
 				//fmt.Printf("Got a kafka message\n")
-				fmt.Printf("%% Message on %s: %s\n", e.TopicPartition, string(e.Value)[100:])
 				kafkaMessage := string(e.Value)
 				fmt.Printf("\nkafkaMessage: %s\n", kafkaMessage) //Message in single string
 				json.Unmarshal([]byte(kafkaMessage), &message)
