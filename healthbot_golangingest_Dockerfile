@@ -13,7 +13,9 @@ RUN go mod download
 RUN GOOS=linux GOARCH=amd64 go build -o app -tags musl
 
 FROM alpine:latest as runner
+RUN apk --no-cache add curl logrotate
+
 WORKDIR /
 COPY --from=builder app .
-COPY README.md rules.json ./
+COPY README.md event_rules.json ./
 COPY jfit_reconfigure.sh /jfit_scripts/
