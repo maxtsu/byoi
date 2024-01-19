@@ -12,14 +12,13 @@ import (
 	client "github.com/influxdata/influxdb1-client/v2"
 )
 
-// Global Variables declared in main
+// Global Variables declared here and in main
 var batchSize int               // Influx write max batch size
 var flushInterval time.Duration // Influx write flush interval in milliseconds
 var InfluxClient client.Client  // Influx client
 func GlobalVariables(b int, f int) {
 	batchSize = b
 	flushInterval = time.Duration(f) * time.Millisecond
-
 }
 
 // gnmic Event Message partial struct

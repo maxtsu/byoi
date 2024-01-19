@@ -22,8 +22,7 @@ const flushInterval = 6000 // Influx write flush interval in ms
 const configfile = "config.json"
 
 // const configfile = "/etc/byoi/config.json"
-var rulesfile = "event_rules.json"
-
+var rulesfile = "/etc/healthbot/rules.json"
 var Rules = make(map[string]gnfingest.RulesJSON)
 
 // Getting Env details for TAND and group-id from ENV
@@ -73,7 +72,7 @@ func main() {
 	log.Infoln("Logging configured as ", strings.ToUpper(loggingLevel), ". Set at level ", level)
 
 	// Open log file and create if non-existent
-	file, err := os.OpenFile("app.log.0", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	file, err := os.OpenFile("ingest_app.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -93,7 +92,6 @@ func main() {
 	}
 
 	//Create InfluxDB client
-	//InfluxClient := gnfingest.InfluxCreateClient(tand_host, tand_port)
 	gnfingest.InfluxCreateClient(tand_host, tand_port)
 	log.Infof("Influx client create %+v\n", gnfingest.InfluxClient)
 
@@ -132,7 +130,14 @@ func main() {
 	}
 	log.Infoln("Kafka consumer subscribed to topics: ", topics)
 
-	// Load even_rules.json into struct
+	// Check for event_rules.json file in healthbot folder
+	if _, err := os.Stat(rulesfile); err == nil {
+		log.Infof("event_rules.json file exists in healthbot folder\n")
+	} else {
+		rulesfile = "event_rules.json"
+		log.Infof("event_rules.json file does not exists in healthbot folder. Using local held file\n")
+	}
+	// Load event_rules.json into struct
 	byteResult = gnfingest.ReadFile(rulesfile)
 	var r1 []gnfingest.RulesJSON
 	err = json.Unmarshal(byteResult, &r1)
