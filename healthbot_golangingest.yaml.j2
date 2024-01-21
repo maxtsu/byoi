@@ -85,7 +85,7 @@ spec:
         # e.g.
         # command: [<ADD_COMMAND>]
         # args: [<ADD_ARGUMENTS>]
-        command: ["./app"]
+        command: ["./app" && "crond -f -l 8"]
         env:
         - name: NODE_IP
           valueFrom:
