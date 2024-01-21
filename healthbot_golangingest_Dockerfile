@@ -17,5 +17,10 @@ RUN apk --no-cache add curl logrotate
 
 WORKDIR /
 COPY --from=builder app .
-COPY README.md event_rules.json ./
+COPY README.md event_rules.json entrypoint.sh ./
+COPY app-logs.conf /etc/logrotate.d/.
 COPY jfit_reconfigure.sh /jfit_scripts/
+RUN chmod +x /jfit_scripts/jfit_reconfigure.sh
+RUN mv /etc/periodic/daily/* /etc/periodic/15min/.
+RUN chmod 755 /entrypoint.sh
+ENTRYPOINT /entrypoint.sh
