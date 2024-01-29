@@ -1,0 +1,9 @@
+[INFO]  2024/01/28 19:38:40 InfluxDB Client connection &{{http  <nil> .healthbot:   false false   }   InfluxDBClient 0xc0001b2e10 0xc0000023c0 }
+[INFO]  2024/01/28 19:38:40 Influx client create &{url:{Scheme:http Opaque: User:<nil> Host:.healthbot: Path: RawPath: OmitHost:false ForceQuery:false RawQuery: Fragment: RawFragment:} username: password: useragent:InfluxDBClient httpClient:0xc0001b2e10 transport:0xc0000023c0 encoding:}
+[INFO]  2024/01/28 19:38:40 Created Consumer. rdkafka#consumer-1
+[INFO]  2024/01/28 19:38:40 Kafka consumer subscribed to topics:  [gnf.network.telemetry]
+[INFO]  2024/01/28 19:38:40 rules.yaml file does not exists in healthbot folder. Using local held file
+[DEBUG] 2024/01/28 19:38:40 Message Source: 10.213.97.34 Prefix: openconfig-interfaces: Path: /interfaces/interface/state/
+[INFO]  2024/01/28 19:38:40 Processing rule Rule-ID: interface-state Name: node5 SystemID: 10.213.97.34
+[DEBUG] 2024/01/28 19:38:40 Index fields from message: map[interface_name:FourHundredGigE0/0/3/0]
+[DEBUG] 2024/01/28 19:38:40 Data & Index fields from message: map[interface_name:FourHundredGigE0/0/3/0 interfaces/interface/state/admin-status:UP interfaces/interface/state/oper-status:DOWN]

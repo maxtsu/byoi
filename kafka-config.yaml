@@ -1,0 +1,10 @@
+---
+bootstrap.servers: "ilayer-kafka-0-dev1-1.gnf.test.btnetwork.co.uk:9092"
+sasl.mechanisms: "PLAIN"
+security.protocol: "SASL_SSL"
+sasl.username: "user"
+sasl.password: "secret1"
+ssl.ca.location: "/home/juniper/api_gw_stuff/dev01-primary/kafka/certs/client/jks_to_pem/CARoot.pem"
+group.id: "test"
+topics: "gnf.network.syslog.messages"
+auto.offset.reset: "latest"

@@ -9,35 +9,37 @@ import (
 	"syscall"
 
 	"github.com/confluentinc/confluent-kafka-go/kafka"
+	"gopkg.in/yaml.v2"
 )
 
-const config_file = "kafka-conf.json"
+const config_file = "kafka-config.yaml"
 
 func main() {
 	sigchan := make(chan os.Signal, 1)
 	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
 
 	byteResult := gnfingest.ReadFile(config_file)
-	var configjson Config
-	err := json.Unmarshal(byteResult, &configjson)
+	var configYaml Config
+	err := yaml.Unmarshal(byteResult, &configYaml)
 	if err != nil {
-		fmt.Println("app-config.json Unmarshall error", err)
+		fmt.Println("kafka-config.yaml Unmarshall error", err)
 	}
-	fmt.Printf("app-config.json %+v\n", configjson)
+	fmt.Printf("kafka-config.yaml: %+v\n", configYaml)
+
 	// Create kafka consumer configuration for kafkaCfg
 	consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
-		"bootstrap.servers":  configjson.Kafka.BootstrapServers,
-		"sasl.mechanisms":    configjson.Kafka.SaslMechanisms,
-		"security.protocol":  configjson.Kafka.SecurityProtocol,
-		"sasl.username":      configjson.Kafka.SaslUsername,
-		"sasl.password":      configjson.Kafka.SaslPassword,
-		"ssl.ca.location":    configjson.Kafka.SslCaLocation,
-		"group.id":           configjson.Kafka.GroupID,
+		"bootstrap.servers":  configYaml.BootstrapServers,
+		"sasl.mechanisms":    configYaml.SaslMechanisms,
+		"security.protocol":  configYaml.SecurityProtocol,
+		"sasl.username":      configYaml.SaslUsername,
+		"sasl.password":      configYaml.SaslPassword,
+		"ssl.ca.location":    configYaml.SslCaLocation,
+		"group.id":           configYaml.GroupID,
 		"session.timeout.ms": 6000,
 		// Start reading from the first message of each assigned
 		// partition if there are no previously committed offsets
 		// for this group.
-		"auto.offset.reset": configjson.Kafka.AutoOffset,
+		"auto.offset.reset": configYaml.AutoOffset,
 		// Whether or not we store offsets automatically.
 		"enable.auto.offset.store": false,
 	})
@@ -47,7 +49,7 @@ func main() {
 	}
 	fmt.Println("Created Consumer. ", consumer)
 
-	topics := []string{configjson.Kafka.Topics}
+	topics := []string{configYaml.Topics}
 	err = consumer.SubscribeTopics(topics, nil)
 
 	run := true
@@ -102,17 +104,15 @@ func main() {
 	}
 }
 
-// configuration file app-config.json
+// configuration file kafka-config.yaml
 type Config struct {
-	Kafka struct {
-		BootstrapServers string `json:"bootstrap.servers"`
-		SaslMechanisms   string `json:"sasl.mechanisms"`
-		SecurityProtocol string `json:"security.protocol"`
-		SaslUsername     string `json:"sasl.username"`
-		SaslPassword     string `json:"sasl.password"`
-		SslCaLocation    string `json:"ssl.ca.location"`
-		GroupID          string `json:"group.id"`
-		Topics           string `json:"topics"`
-		AutoOffset       string `json:"auto.offset.reset"`
-	} `json:"kafka"`
+	BootstrapServers string `yaml:"bootstrap.servers"`
+	SaslMechanisms   string `yaml:"sasl.mechanisms"`
+	SecurityProtocol string `yaml:"security.protocol"`
+	SaslUsername     string `yaml:"sasl.username"`
+	SaslPassword     string `yaml:"sasl.password"`
+	SslCaLocation    string `yaml:"ssl.ca.location"`
+	GroupID          string `yaml:"group.id"`
+	Topics           string `yaml:"topics"`
+	AutoOffset       string `yaml:"auto.offset.reset"`
 }

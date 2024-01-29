@@ -14,6 +14,7 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/gologme/log"
 	client "github.com/influxdata/influxdb1-client/v2"
+	"gopkg.in/yaml.v2"
 )
 
 // Global Variables
@@ -23,7 +24,7 @@ const configfile = "config.json"
 
 // const configfile = "/etc/byoi/config.json"
 var rulesfile = "/etc/healthbot/rules.json"
-var Rules = make(map[string]gnfingest.RulesJSON)
+var Rules = make(map[string]gnfingest.YamlRule)
 
 // Getting Env details for TAND and group-id from ENV
 var tand_host = (os.Getenv("TAND_HOST") + ".healthbot")
@@ -130,19 +131,19 @@ func main() {
 	}
 	log.Infoln("Kafka consumer subscribed to topics: ", topics)
 
-	// Check for event_rules.json file in healthbot folder
+	// Check for event_rules.yaml file in healthbot folder
 	if _, err := os.Stat(rulesfile); err == nil {
-		log.Infof("event_rules.json file exists in healthbot folder\n")
+		log.Infof("rules.yaml file exists in healthbot folder\n")
 	} else {
-		rulesfile = "event_rules.json"
-		log.Infof("event_rules.json file does not exists in healthbot folder. Using local held file\n")
+		rulesfile = "rules.yaml"
+		log.Infof("rules.yaml file does not exists in healthbot folder. Using local held file\n")
 	}
-	// Load event_rules.json into struct
+	// Load rules.yaml into struct
 	byteResult = gnfingest.ReadFile(rulesfile)
-	var r1 []gnfingest.RulesJSON
-	err = json.Unmarshal(byteResult, &r1)
+	var r1 []gnfingest.YamlRule
+	err = yaml.Unmarshal(byteResult, &r1)
 	if err != nil {
-		log.Error("rules.json Unmarshall error ", err)
+		log.Error("rules.yaml Unmarshall error ", err)
 	}
 	// create map of structs key=rule-id using global Rules variable
 	for _, r := range r1 {
@@ -305,7 +306,7 @@ func ProcessJsonMessage(message *gnfingest.Message, kafkaMessage *[]byte, device
 	fmt.Printf("Device.. %+v\n", device)
 }
 
-func getFields(message *gnfingest.Message, fields map[string]interface{}, rule *gnfingest.RulesJSON) {
+func getFields(message *gnfingest.Message, fields map[string]interface{}, rule *gnfingest.YamlRule) {
 	// Receive raw data section of message (values) put in map
 	var rawDataMap map[string]any
 	err := json.Unmarshal(message.Values, &rawDataMap)

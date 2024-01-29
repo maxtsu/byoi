@@ -219,14 +219,13 @@ func KVS_parsing(keys []KVS, keyString []string) map[string]string {
 	return results //return map of key-values
 }
 
-// Struct define a rule in rules.json
-type RulesJSON struct {
-	Comment     string   `json:"comment"`
-	RuleID      string   `json:"rule-id"`
-	Path        string   `json:"path"`
-	Prefix      string   `json:"prefix"`
-	IndexValues []string `json:"index_values"`
-	Fields      []string `json:"fields"`
+// Struct define event rule in rules.yaml
+type YamlRule struct {
+	RuleID      string   `yaml:"rule-id"`
+	Path        string   `yaml:"path"`
+	Prefix      string   `yaml:"prefix"`
+	IndexValues []string `yaml:"index-values"`
+	Fields      []string `yaml:"fields"`
 }
 
 // Create InfluxDB client Global variable InfluxClient
