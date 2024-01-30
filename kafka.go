@@ -2,7 +2,6 @@ package main
 
 import (
 	"byoi/gnfingest"
-	"encoding/json"
 	"fmt"
 	"os"
 	"os/signal"
@@ -71,8 +70,9 @@ func main() {
 				// Process the message received.
 				//fmt.Printf("Got a kafka message\n")
 				kafkaMessage := string(e.Value)
-				fmt.Printf("\nkafkaMessage: %s\n", kafkaMessage) //Message in single string
-				json.Unmarshal([]byte(kafkaMessage), &message)
+				//fmt.Printf("\nkafkaMessage: %s\n", kafkaMessage) //Message in single string
+				fmt.Printf("%s\n", kafkaMessage) //Message in single string
+				//json.Unmarshal([]byte(kafkaMessage), &message)
 				// Start processing message
 				//ProcessKafkaMessage(&message, device_keys)
 				if e.Headers != nil {
