@@ -54,7 +54,7 @@ func main() {
 
 	run := true
 	for run {
-		fmt.Printf("waiting for kafka message\n")
+		//fmt.Printf("waiting for kafka message\n")
 		select {
 		case sig := <-sigchan:
 			fmt.Printf("Caught signal %v: terminating\n", sig)
