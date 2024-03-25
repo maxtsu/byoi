@@ -17,6 +17,6 @@ RUN apk --no-cache add curl
 
 WORKDIR /
 COPY --from=builder app .
-COPY README.md event_rules.json ./
+COPY README.md rules.yaml ./
 COPY jfit_reconfigure.sh /jfit_scripts/
 RUN chmod +x /jfit_scripts/jfit_reconfigure.sh

@@ -21,6 +21,14 @@ func GlobalVariables(b int, f int) {
 	flushInterval = time.Duration(f) * time.Millisecond
 }
 
+// Top level only decoded message Tags and Values in raw format
+type PartDecodedMessage struct {
+	Name      string          `json:"name"`
+	Timestamp int64           `json:"timestamp"`
+	Tags      json.RawMessage `json:"tags"`
+	Values    json.RawMessage `json:"values"`
+}
+
 // gnmic Event Message partial struct
 type Message struct {
 	Name      string `json:"name"`
@@ -38,6 +46,8 @@ type Message struct {
 func (m *Message) MessageVerify() error {
 	if m.Name == "" {
 		return fmt.Errorf("no Name field in message")
+	} else if m.Timestamp <= 0 {
+		return fmt.Errorf("no Timestamp field in message")
 	} else if m.Tags.Prefix == "" {
 		return fmt.Errorf("no Prefix field in message")
 	} else if m.Tags.Source == "" {
@@ -239,7 +249,6 @@ func InfluxCreateClient(tand_host string, tand_port string) {
 	})
 	if err != nil {
 		log.Errorln("Error creating InfluxDB Client: ", err.Error())
-		fmt.Println("Error creating InfluxDB Client: ", err.Error())
 	}
 	defer InfluxClient.Close()
 	log.Infoln("InfluxDB Client connection", InfluxClient)
@@ -252,8 +261,6 @@ func (dev *Device_Details) TimerHandler() {
 		select {
 		//Timeout fire after flushinterval
 		case <-dev.Timer.C:
-			fmt.Printf("Timer %s fired\n", dev.DeviceName)
-
 			dev.Timer.Stop()
 			d := *dev
 			go FlushPoints(d)
@@ -294,7 +301,7 @@ func FlushPoints(dev Device_Details) {
 		if err != nil {
 			log.Errorf("Write Batchpoint to Influx database %s error %s\n", dev.Database, err.Error())
 		} else {
-			log.Infof("Write Batchpoint to Influx for %s using database: %s\n", dev.DeviceName, dev.Database)
+			log.Debugf("Write Batchpoint to Influx for %s using database: %s\n", dev.DeviceName, dev.Database)
 		}
 	} else {
 		log.Errorf("No Influx client to write data points\n")
