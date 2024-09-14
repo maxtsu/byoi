@@ -7,7 +7,7 @@
         "inputs": [
             {
                 "plugin": {
-                    "name": "golangingest",
+                    "name": "kafkaingest2",
                     "config": {
                         "device": [
                             {
@@ -27,6 +27,14 @@
                                             {
                                                 "key": "prefix",
                                                 "value": "openconfig-interfaces:"
+                                            },
+                                            {
+                                                "key": "fields",
+                                                "value": "interfaces/interface/state/oper-status, interfaces/interface/state/admin-status"
+                                            },
+                                            {
+                                                "key": "index",
+                                                "value": "interface_name"
                                             }
                                         ],
                                         "measurement": "external/cisco-check-interface-state-oc/interface_state/byoi"
@@ -79,6 +87,14 @@
                                             {
                                                 "key": "prefix",
                                                 "value": "openconfig-interfaces:"
+                                            },
+                                            {
+                                                "key": "fields",
+                                                "value": "interfaces/interface/state/oper-status  , interfaces/interface/state/admin-status"
+                                            },
+                                            {
+                                                "key": "index",
+                                                "value": "interface_name"
                                             }
                                         ],
                                         "measurement": "external/cisco-check-interface-state-oc/interface_state/byoi"
@@ -88,7 +104,7 @@
                                         "kvs": [
                                             {
                                                 "key": "path",
-                                                "value": "/interfaces/interface/state/counters/"
+                                                "value": "/interfaces/interface/state/"
                                             },
                                             {
                                                 "key": "rule-id",
@@ -113,6 +129,110 @@
                                     "retention-policy": "hb-default:Cisco-virtual:node5"
                                 },
                                 "system-id": "10.213.97.34"
+                            },
+                            {
+                                "name": "10.213.97.79",
+                                "sensor": [
+                                    {
+                                        "name": "external/cisco-check-interface-state-oc/interface_state",
+                                        "kvs": [
+                                            {
+                                                "key": "fields",
+                                                "value": "interfaces/interface/state/oper-status, interfaces/interface/state/admin-status"
+                                            },
+                                            {
+                                                "key": "index",
+                                                "value": "interface_name"
+                                            },
+                                            {
+                                                "key": "path",
+                                                "value": "/interfaces/interface/state/"
+                                            },
+                                            {
+                                                "key": "prefix",
+                                                "value": "openconfig-interfaces:"
+                                            }
+                                        ],
+                                        "measurement": "external/cisco-check-interface-state-oc/interface_state/byoi"
+                                    },
+                                    {
+                                        "name": "external/cisco-check-interface-traffic-health-ingest2/interface_stats_health",
+                                        "kvs": [
+                                            {
+                                                "key": "fields",
+                                                "value": "interfaces/interface/state/counters/in-broadcast-pkts, interfaces/interface/state/counters/in-discards, interfaces/interface/state/counters/in-errors, interfaces/interface/state/counters/in-fcs-errors, interfaces/interface/state/counters/in-multicast-pkts, interfaces/interface/state/counters/in-octets, interfaces/interface/state/counters/in-pkts, interfaces/interface/state/counters/in-unicast-pkts, interfaces/interface/state/counters/in-unknown-protos, interfaces/interface/state/counters/out-broadcast-pkts, interfaces/interface/state/counters/out-discards, interfaces/interface/state/counters/out-errors, interfaces/interface/state/counters/out-multicast-pkts, interfaces/interface/state/counters/out-octets, interfaces/interface/state/counters/out-pkts, interfaces/interface/state/counters/out-unicast-pkts"
+                                            },
+                                            {
+                                                "key": "index",
+                                                "value": "interface_name"
+                                            },
+                                            {
+                                                "key": "path",
+                                                "value": "/interfaces/interface/state/counters/"
+                                            },
+                                            {
+                                                "key": "prefix",
+                                                "value": "openconfig-interfaces:"
+                                            }
+                                        ],
+                                        "measurement": "external/cisco-check-interface-traffic-health-ingest2/interface_stats_health/byoi"
+                                    },
+                                    {
+                                        "name": "external/cisco-check-subinterface-state-ingest2/sub_interface_state",
+                                        "kvs": [
+                                            {
+                                                "key": "fields",
+                                                "value": "interfaces/interface/subinterfaces/subinterface/state/admin-status, interfaces/interface/subinterfaces/subinterface/state/oper-status"
+                                            },
+                                            {
+                                                "key": "index",
+                                                "value": "interface_name, subinterface_index"
+                                            },
+                                            {
+                                                "key": "path",
+                                                "value": "/interfaces/interface/subinterfaces/subinterface/state/"
+                                            },
+                                            {
+                                                "key": "prefix",
+                                                "value": "openconfig-interfaces:"
+                                            }
+                                        ],
+                                        "measurement": "external/cisco-check-subinterface-state-ingest2/sub_interface_state/byoi"
+                                    },
+                                    {
+                                        "name": "external/cisco-check-interface-state-ingest2/interface_state",
+                                        "kvs": [
+                                            {
+                                                "key": "fields",
+                                                "value": "interfaces/interface/state/oper-status, interfaces/interface/state/admin-status"
+                                            },
+                                            {
+                                                "key": "index",
+                                                "value": "interface_name"
+                                            },
+                                            {
+                                                "key": "path",
+                                                "value": "/interfaces/interface/state/"
+                                            },
+                                            {
+                                                "key": "prefix",
+                                                "value": "openconfig-interfaces:"
+                                            }
+                                        ],
+                                        "measurement": "external/cisco-check-interface-state-ingest2/interface_state/byoi"
+                                    }
+                                ],
+                                "authentication": {
+                                    "password": {
+                                        "password": "$9$pIzYOBEreWX7VpuK8XNY2P5QFnCp0IlvWNd4JUHPfn69",
+                                        "username": "juniper_TE"
+                                    }
+                                },
+                                "healthbot-storage": {
+                                    "database": "hb-default:PE-routers:edge1-atl8-us",
+                                    "retention-policy": "hb-default:PE-routers:edge1-atl8-us"
+                                },
+                                "system-id": "10.213.97.79"
                             }
                         ],
                         "device-group": "Cisco-virtual",

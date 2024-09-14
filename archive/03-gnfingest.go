@@ -143,7 +143,7 @@ type KVS struct {
 }
 
 // Function to return list/slice of device details from config.json
-func (c *Configjson) DeviceDetails() []*Device_Details {
+func (c *Configjson) DeviceDetails(keys []string) []*Device_Details {
 	// create map of devices key is DeviceName
 	var device_details = []*Device_Details{} //slice of pointers
 	for _, d := range c.Hbin.Inputs[0].Plugin.Config.Device {
@@ -151,21 +151,21 @@ func (c *Configjson) DeviceDetails() []*Device_Details {
 		dev.DeviceName = d.Name
 		dev.SystemID = d.SystemID
 		dev.Database = d.HealthbotStorage.Database
-		dev.Hostname = (strings.Split(dev.Database, ":"))[2] //hostname extract from database
-		var sensors = []Sensor{}
+		var sensors = map[string]Sensor{}
 		//extract list/slice of structs for sensors
+		//d.MapKVS() //Create map for KVS items
 		// Iterate over array of sensors
 		for _, s := range d.Sensor {
 			var sensor Sensor
-			sensor.Name = s.Name
 			sensor.Measurement = s.Measurement
-			sensor.KVS_path = KVS_parse_key(s.KVS, "path")
-			sensor.KVS_prefix = KVS_parse_key(s.KVS, "prefix")
-			// Extract index and fields. Split string by comma. Remove/trim whitespace
-			sensor.KVS_index = splitString(KVS_parse_key(s.KVS, "index"))   //index or key, strings
-			sensor.KVS_fields = splitString(KVS_parse_key(s.KVS, "fields")) // fields values required from message
-			sensor.PrefixPath = sensor.KVS_prefix + sensor.KVS_path
-			sensors = append(sensors, sensor) //Add sensor to list of sensors in device
+			kvs_pairs := KVS_parsing(s.KVS, keys)
+			// Parameters from config.json {path}
+			sensor.KVS_path = kvs_pairs["path"]
+			sensor.KVS_rule_id = kvs_pairs["rule-id"]
+			sensor.KVS_prefix = kvs_pairs["prefix"]
+			//Sensor map key/index is concatenated prefix + path
+			map_key := sensor.KVS_prefix + sensor.KVS_path
+			sensors[map_key] = sensor
 		}
 		dev.Sensor = sensors
 		dev.Timer = time.NewTimer(flushInterval) //Timer for flushing data
@@ -177,26 +177,23 @@ func (c *Configjson) DeviceDetails() []*Device_Details {
 }
 
 // struct defining sensor/rule for each device
+// -device name -kvs path -kvs rule-id
 // -kvs prefix -measurement -database
 type Device_Details struct {
 	DeviceName string
 	Database   string
 	SystemID   string
-	Hostname   string            // extracted from database
-	Points     []*client.Point   // list/slice of batch points
-	Point      chan client.Point // single batch point channel
-	Timer      *time.Timer       // timer for flush data
-	Sensor     []Sensor          // list of sensors
+	Points     []*client.Point   //list/slice of batch points
+	Point      chan client.Point //single batch point channel
+	Timer      *time.Timer       //timer for flush data
+	Sensor     map[string]Sensor //key for map is KVS_path
 }
 
 // struct defining sensor/rule for each device
 type Sensor struct {
-	Name        string //sensor name
-	PrefixPath  string //prefix+path
 	KVS_path    string
+	KVS_rule_id string
 	KVS_prefix  string
-	KVS_index   []string //slice of index
-	KVS_fields  []string // slice of fields
 	Measurement string
 }
 
@@ -213,34 +210,32 @@ func ReadFile(fileName string) []byte {
 }
 
 // Function to extract KVS pairs by key names passed into function
-func KVS_parse_key(keys []KVS, keyString string) string {
+func KVS_parsing(keys []KVS, keyString []string) map[string]string {
 	// Build a config map:
 	confMap := map[string]string{}
 	for _, v := range keys {
 		confMap[v.Key] = v.Value
 	}
-	// Find value by key in the config map
-	value := ""
-	if v, ok := confMap[keyString]; ok {
-		value = v
-	} else {
-		log.Infoln("Key:", keyString, " not in config.json sensor KVS")
+	// Find values by key in the config map
+	var results = make(map[string]string) //map for return values
+	for _, key := range keyString {
+		if v, ok := confMap[key]; ok {
+			results[key] = v
+		} else {
+			log.Infoln(key, "not in config.json")
+			results[key] = ""
+		}
 	}
-	return value
+	return results //return map of key-values
 }
 
-// Function to split string into slice/list of strings by comma & trim whitespace
-func splitString(str string) []string {
-	// fields = "interfaces/interface/state/oper-status,interfaces/interface/state/admin-status"
-	// Split the string by comma into a slice
-	s1 := strings.Split(str, ",")
-	var sliceOfStrings []string
-	for _, s2 := range s1 {
-		// Trim whitespace from the fields
-		s3 := strings.TrimSpace(s2)
-		sliceOfStrings = append(sliceOfStrings, s3)
-	}
-	return sliceOfStrings
+// Struct define event rule in rules.yaml
+type YamlRule struct {
+	RuleID      string   `yaml:"rule-id"`
+	Path        string   `yaml:"path"`
+	Prefix      string   `yaml:"prefix"`
+	IndexValues []string `yaml:"index-values"`
+	Fields      []string `yaml:"fields"`
 }
 
 // Create InfluxDB client Global variable InfluxClient
@@ -304,6 +299,8 @@ func FlushPoints(dev Device_Details) {
 		err := InfluxClient.Write(batchPoint) //Write batchpoint to Influx
 		if err != nil {
 			log.Errorf("Write Batchpoint to Influx database %s error %s\n", dev.Database, err.Error())
+		} else {
+			log.Debugf("Write Batchpoint to Influx for %s using database: %s\n", dev.DeviceName, dev.Database)
 		}
 	} else {
 		log.Errorf("No Influx client to write data points\n")

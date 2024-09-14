@@ -14,20 +14,23 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/gologme/log"
 	client "github.com/influxdata/influxdb1-client/v2"
+	"gopkg.in/yaml.v2"
 )
 
 // Global Variables
 const batchSize = 600      // Influx write batch size
 const flushInterval = 1000 // Influx write flush interval in ms
-// const configfile = "/etc/byoi/config.json"
-const configfile = "config.json"
+const configfile = "/etc/byoi/config.json"
+
+var rulesfile = "/etc/healthbot/rules.yaml"
+var Rules = make(map[string]gnfingest.YamlRule)
 
 var Global_device_details = make(map[string]*gnfingest.Device_Details)
 
 // Getting Env details for TAND and group-id from ENV
 var tand_host = (os.Getenv("TAND_HOST") + ".healthbot")
 var tand_port = os.Getenv("TAND_PORT")
-var group = (os.Getenv("CHANNEL") + "-golang1")
+var group = (os.Getenv("CHANNEL'") + "-golang1")
 
 func main() {
 	// signal channel to notify on SIGHUP
@@ -70,8 +73,21 @@ func main() {
 	log.EnableFormattedPrefix()
 	log.Infoln("Logging configured as ", strings.ToUpper(loggingLevel), ". Set at level ", level)
 
-	// config.json list of parameters and values for each device
-	device_details_slice := configjson.DeviceDetails()
+	// Open log file and create if non-existent
+	/*
+		file, err := os.OpenFile("ingest_app.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer file.Close()
+		// assign it to the standard logger and file
+		multi := io.MultiWriter(file, os.Stdout)
+		log.SetOutput(multi)  */
+
+	// config.json list of device key from values under sensor for searching messages
+	keys := []string{"path", "rule-id", "prefix"} //list of keys/parameters to extract from the KVS section
+
+	device_details_slice := configjson.DeviceDetails(keys)
 	//Create Map of devices key is SystemID for source searching
 	for _, d := range device_details_slice {
 		Global_device_details[d.SystemID] = d //Add to global variable
@@ -82,14 +98,8 @@ func main() {
 	log.Infof("Influx client create %+v\n", gnfingest.InfluxClient)
 
 	// extract the brokers topics and configuration from the configjson KVS
-	var kafkaCfg = make(map[string]string)
-	kafkaCfg["brokers"] = gnfingest.KVS_parse_key(configjson.Hbin.Inputs[0].Plugin.Config.KVS, "brokers")
-	kafkaCfg["topics"] = gnfingest.KVS_parse_key(configjson.Hbin.Inputs[0].Plugin.Config.KVS, "topics")
-	kafkaCfg["saslusername"] = gnfingest.KVS_parse_key(configjson.Hbin.Inputs[0].Plugin.Config.KVS, "saslusername")
-	kafkaCfg["saslpassword"] = gnfingest.KVS_parse_key(configjson.Hbin.Inputs[0].Plugin.Config.KVS, "saslpassword")
-	kafkaCfg["saslmechanism"] = gnfingest.KVS_parse_key(configjson.Hbin.Inputs[0].Plugin.Config.KVS, "saslmechanism")
-	kafkaCfg["securityprotocol"] = gnfingest.KVS_parse_key(configjson.Hbin.Inputs[0].Plugin.Config.KVS, "securityprotocol")
-
+	kafkaCfg := gnfingest.KVS_parsing(configjson.Hbin.Inputs[0].Plugin.Config.KVS, []string{"brokers", "topics",
+		"saslusername", "saslpassword", "saslmechanism", "securityprotocol"})
 	ssl_ca_location := "/ca.crt" //localtion of local ca.crt certificate
 	// Create kafka consumer configuration for kafkaCfg
 	consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
@@ -123,8 +133,25 @@ func main() {
 	}
 	log.Infoln("Kafka consumer subscribed to topics: ", topics)
 
-	//run := true
-	run := false // for hometest
+	// Check for event_rules.yaml file in healthbot folder
+	if _, err := os.Stat(rulesfile); err == nil {
+		log.Infof("rules.yaml file exists in healthbot folder\n")
+	} else {
+		rulesfile = "rules.yaml"
+		log.Infof("rules.yaml file does not exists in healthbot folder. Using local held file\n")
+	}
+	// Load rules.yaml into struct
+	byteResult = gnfingest.ReadFile(rulesfile)
+	var r1 []gnfingest.YamlRule
+	err = yaml.Unmarshal(byteResult, &r1)
+	if err != nil {
+		log.Error("rules.yaml Unmarshall error ", err)
+	}
+	// create map of structs key=rule-id using global Rules variable
+	for _, r := range r1 {
+		Rules[r.RuleID] = r
+	}
+	run := true
 	for run {
 		select {
 		case sig := <-sigchan:
@@ -139,14 +166,21 @@ func main() {
 			switch e := event.(type) {
 			case *kafka.Message:
 				// Process the message received.
-				log.Debugf("%% Message on %s: %s\n", e.TopicPartition, safeSlice(string(e.Value), 500))
-				gnfingest.KafkaKeyCheck(e.Key) // search for device from the message key
+				log.Debugf("%% Message on %s: %s\n", e.TopicPartition, safeSlice(string(e.Value), 400))
 				kafkaMessage := string(e.Value)
-				// Start processing message in goroutine for concurrent processing
+				//fmt.Debugf("\nkafkaMessage: %s\n", kafkaMessage) //Message in single string
+				// Start processing message
 				ProcessKafkaMessage([]byte(kafkaMessage))
 				if e.Headers != nil {
 					log.Warnf("%% Headers: %v\n", e.Headers)
 				}
+				// We can store the offsets of the messages manually or let
+				// the library do it automatically based on the setting
+				// enable.auto.offset.store. Once an offset is stored, the
+				// library takes care of periodically committing it to the broker
+				// if enable.auto.commit isn't set to false (the default is true).
+				// By storing the offsets manually after completely processing
+				// each message, we can ensure atleast once processing.
 				_, err := consumer.StoreMessage(e)
 				if err != nil {
 					fmt.Fprintf(os.Stderr, "%% Error storing offset after message %s:\n",
@@ -164,15 +198,11 @@ func main() {
 			}
 		}
 	}
-
-	// Run sample files in home lab
-	hometest() //call hometest function
-
 	// Ensures background processes finishes
 	gnfingest.InfluxClient.Close()
 }
 
-// Function to safely slice a string to a defined length
+// Function to safely slice a string
 func safeSlice(slice string, length int) string {
 	if len(slice) < length {
 		length = len(slice)
@@ -198,17 +228,12 @@ func ProcessKafkaMessage(rawMessage []byte) {
 	} else { // Kafka message unknown format for unpacking
 		jsonErr = errors.New("Raw kafka JSON message unknown format")
 	}
+
 	if jsonErr != nil { // Error Unable to decode JSON message
-		log.Errorf("Kafka message Unmarshal error: %s. JSON Msg: %s\n", jsonErr, (safeSlice((fmt.Sprintf("%s", rawMessage)), 500)))
+		log.Errorf("Kafka message Unmarshal error: %s. Msg: %s\n", jsonErr, rawMessage) //need to change raw message
 	} else { // Iterate trhough slice of messages
 		for _, part_decode_message := range message_slice {
-			//Basic check here to ensure event format message
-			if len(part_decode_message.Tags) < 1 && len(part_decode_message.Values) < 1 {
-				//This is not a valid event format message
-				log.Infof("Not a valid event format JSON message: %s\n", (safeSlice((fmt.Sprintf("%s", rawMessage)), 500)))
-			} else {
-				ProcessMessageHeader(part_decode_message) //This is a valid Event format message
-			}
+			ProcessMessageHeader(part_decode_message)
 		}
 	}
 }
@@ -221,34 +246,34 @@ func ProcessMessageHeader(partDecodeMessage gnfingest.PartDecodedMessage) {
 	message.Values = partDecodeMessage.Values // Add values as rawBytes
 	tagDecodeErr := json.Unmarshal(partDecodeMessage.Tags, &message.Tags)
 	if tagDecodeErr != nil {
-		log.Errorf("Message Tags decode unmarshall error: %s Message:%+v", tagDecodeErr, partDecodeMessage)
+		log.Errorf("Message tags decode unmarshall errorr: %s Msg:%+v", tagDecodeErr, partDecodeMessage)
 	}
+
 	rawTags := partDecodeMessage.Tags // Extract the tags as raw bytes for decoding later
 
 	msgVerify := message.MessageVerify() //Verify the message struct schema
 	if msgVerify != nil {                // Not valid openconfig message
-		log.Infof("JSON message not valid telemetry event-format structure %s Message: %s\n", msgVerify, (safeSlice((fmt.Sprintf("%s", message)), 500)))
+		log.Infof("JSON message invalid structure %s MSG: %s\n", msgVerify, (safeSlice((fmt.Sprintf("%s", message)), 400)))
 	} else { // Valid openconfig message
-		log.Infof("Valid JSON openconfig telemetry event-format message: %s\n", (safeSlice((fmt.Sprintf("%s", message)), 500)))
+		log.Infof("Valid JSON openconfig message: %s\n", (safeSlice((fmt.Sprintf("%s", message)), 400)))
 		//Extract source IP and Path from message
 		messageSource := message.MessageSource()
 		messagePrefix := message.Tags.Prefix
 		messagePath := message.Tags.Path
 		messagePrefixPath := messagePrefix + messagePath
-		log.Debugf("Message Source: %s Path: %s\n", messageSource, messagePrefixPath)
-
+		log.Debugf("Message Source: %s Prefix: %s Path: %s\n", messageSource, messagePrefix, messagePath)
 		//Start matching message to configured rules in config.json (device_keys)
 		device, ok1 := Global_device_details[messageSource]
 		if ok1 { // Source/Device IP is in config.json list
-			log.Debugf("Device matched:%s Searching for sensor match\n", device.DeviceName)
-			// Need to start a loop and loop through the sensors
-			for _, sensor := range device.Sensor {
-				//code to check if the sensor is a match
-				if messagePrefixPath == sensor.PrefixPath {
-					log.Debugf("Message matched Device:%s Matched Sensor:%s\n", device.DeviceName, sensor.Name)
-					//code for sensor match
-					ProcessJsonMessage(&message, rawTags, device, sensor)
-				}
+			log.Debugf("Device matched to message: %s\n", device.DeviceName)
+			sensor, ok2 := device.Sensor[messagePrefixPath]
+			if ok2 { // Match for Prefix and Path
+				log.Debugf("Device & Sensor match to message: %s %+v\n", device.DeviceName, sensor)
+				rule_id := sensor.KVS_rule_id //Rule-id for processing
+				log.Infof("Processing rule Rule-ID: %s Name: %s SystemID: %s\n", rule_id, device.DeviceName, device.SystemID)
+				ProcessJsonMessage(&message, rawTags, device, sensor)
+			} else {
+				log.Debugln("No matching sensor/rule in config.json")
 			}
 		} else {
 			log.Debugln("No matching device in config.json")
@@ -257,6 +282,9 @@ func ProcessMessageHeader(partDecodeMessage gnfingest.PartDecodedMessage) {
 }
 
 func ProcessJsonMessage(message *gnfingest.Message, rawTags json.RawMessage, device *gnfingest.Device_Details, sensor gnfingest.Sensor) {
+	//Rule-id for processing
+	rule_id := sensor.KVS_rule_id
+	rule := Rules[rule_id] // extract the rule in rules.json
 	// Convert rawTags into mapped output for JSON searching
 	var tagMap map[string]any
 	err1 := json.Unmarshal(rawTags, &tagMap)
@@ -265,10 +293,9 @@ func ProcessJsonMessage(message *gnfingest.Message, rawTags json.RawMessage, dev
 	}
 	// Declare fields map with interface
 	var fields = make(map[string]interface{}) // fields & indexes from message
-	// List of indexes from the matched sensor
-	for _, i := range sensor.KVS_index {
+	//list of Indexes from rule.json
+	for _, i := range rule.IndexValues {
 		//Get indexes from Tags mapped value
-		//Extract the index value from the Tags section of the message
 		value := fmt.Sprintf("%v", tagMap[i]) //Convert all values into string
 		fields[i] = value                     // Add value to data map
 	}
@@ -276,12 +303,12 @@ func ProcessJsonMessage(message *gnfingest.Message, rawTags json.RawMessage, dev
 	t := time.Unix(0, message.Timestamp)
 	//log.Debugf("Index fields from message: %+v\n", fields)
 	// extract Field values
-	getFields(message, fields, &sensor)
-	// device_hostname added to fields for insertion into TSDB
-	fields["device_hostname"] = device.Hostname
+	getFields(message, fields, &rule)
 	log.Debugf("Data & Index fields from message: %+v\n", fields)
 
 	// Create InfluxDB Point and append to slice/list in Device_details using the handler function
+	//device.AddPoint(Influxclient, fields, time, sensor, batchSize)
+
 	// Create a point and add to batch
 	//tags := map[string]string{}
 	//pt, err := client.NewPoint(sensor.Measurement, tags, fields, time)
@@ -294,48 +321,20 @@ func ProcessJsonMessage(message *gnfingest.Message, rawTags json.RawMessage, dev
 	}
 }
 
-func getFields(message *gnfingest.Message, fields map[string]interface{}, sensor *gnfingest.Sensor) {
+func getFields(message *gnfingest.Message, fields map[string]interface{}, rule *gnfingest.YamlRule) {
 	// Receive raw data section of message (values) put in map
 	var rawDataMap map[string]any
 	err := json.Unmarshal(message.Values, &rawDataMap)
 	if err != nil {
 		log.Errorf("Kafka Values message Unmarshal error", err)
 	}
-
+	// list of fields to collect rule.Fields
 	//Extract list of field values from the mapped values
-	for _, fi := range sensor.KVS_fields {
-		// The full field keyname is prefix and path
-		fp := sensor.KVS_prefix + "/" + fi //add prefix to the field path
-		//Extract the field value from the value section of the message
+	//var fields = make(map[string]string)
+	for _, fi := range rule.Fields {
+		fp := rule.Prefix + "/" + fi               //add prefix to path
 		value := fmt.Sprintf("%v", rawDataMap[fp]) //Convert all values into string
-		fields[fi] = value                         //Add to fields map for point writting
+		fields[fi] = value                         //Get field value Add to fields map
 	}
-}
-
-func hometest() {
-	fmt.Printf("Home test\n")
-	fmt.Printf("ALL DEVICES %+v\n", Global_device_details)
-	for _, d := range Global_device_details { // Print all devices
-		fmt.Printf("DEVICE: %+v\n", d)
-		for _, s := range d.Sensor {
-			fmt.Printf("SENSOR Name: %+v\n", s.Name)
-			for _, f := range s.KVS_fields {
-				fmt.Printf("fields: %+v\n", f)
-			}
-		}
-	}
-
-	// Processing sample message
-	var sample = "ev-interface-state.json"
-	//var sample = "interface-state.json"
-	//var sample = "array.json"
-	byteResult := gnfingest.ReadFile(sample)
-
-	// fmt.Printf("message: %+v", kafkaMessage)
-	fmt.Println("============Start ProcessKafkaMessage==========================")
-	// processs message just like a kafka message
-	fmt.Println(byteResult)
-	go ProcessKafkaMessage(byteResult)
-	// Wait for goroutine to finish
-	time.Sleep(time.Second * 2)
+	//log.Debugf("Data fields extracted from message: %+v\n", fields)
 }

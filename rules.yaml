@@ -11,7 +11,7 @@
 
 #rule for subinterface link state
 - rule-id: "sub-interface-state"
-  path: "/interfaces/interface/subinterfaces/subinterface/"
+  path: "/interfaces/interface/subinterfaces/subinterface/state/"
   prefix": "openconfig-interfaces:"
   index-values:
     - "interface_name"

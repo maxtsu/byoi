@@ -107,24 +107,14 @@ func main() {
 	} else { //This is a producer
 		fmt.Printf("Kafka producer \n")
 		producer, err := kafka.NewProducer(&kafka.ConfigMap{
-			"bootstrap.servers":  configYaml.BootstrapServers,
-			"sasl.mechanisms":    configYaml.SaslMechanisms,
-			"security.protocol":  configYaml.SecurityProtocol,
-			"sasl.username":      configYaml.SaslUsername,
-			"sasl.password":      configYaml.SaslPassword,
-			"ssl.ca.location":    configYaml.SslCaLocation,
-			"group.id":           configYaml.GroupID,
-			"session.timeout.ms": 6000,
-			// Start reading from the first message of each assigned
-			// partition if there are no previously committed offsets
-			// for this group.
-			"auto.offset.reset": configYaml.AutoOffset,
-			// Whether or not we store offsets automatically.
-			"enable.auto.offset.store": false,
-
-			"client.id": "client-ID-TEST",
-			"acks":      "all"})
-
+			"bootstrap.servers": configYaml.BootstrapServers,
+			"sasl.mechanisms":   configYaml.SaslMechanisms,
+			"security.protocol": configYaml.SecurityProtocol,
+			"sasl.username":     configYaml.SaslUsername,
+			"sasl.password":     configYaml.SaslPassword,
+			"ssl.ca.location":   configYaml.SslCaLocation,
+			"client.id":         configYaml.GroupID,
+			"acks":              "all"})
 		if err != nil {
 			fmt.Printf("Failed to create producer: %s\n", err)
 			os.Exit(1)
